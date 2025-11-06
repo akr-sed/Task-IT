@@ -14,6 +14,7 @@ const projectSchema = new mongoose.Schema(
         ownedBy: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
         createdBy: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
         name: { type: String, required: true, unique: true },
+        displayName: String,
         description: String,
         members: [
             {
