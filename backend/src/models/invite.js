@@ -20,4 +20,14 @@ const inviteSchema = new mongoose.Schema(
 
 
 
+// validate that at least one exist
+inviteSchema.pre("validate", function () {
+    if (!this.invitedUserId && !this.invitedEmail) {
+        return next(new Error("Either invitedUserId or invitedEmail must be provided."));
+    }
+
+    // todo: validate if the user owns the project
+    // next();
+});
+
 export default mongoose.model("Invite", inviteSchema);
