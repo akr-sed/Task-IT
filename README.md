@@ -1,1 +1,172 @@
-# Task-IT
+# TASKIT
+
+# Software Requirements Specification (SRS) for Taskit
+
+## 1. Introduction
+
+### 1.1 Purpose
+
+The purpose of this software is to provide students with a task
+management platform designed to help them efficiently manage and
+organize their school projects. Many student projects lack proper
+management, coordination, and tracking, leading to missed deadlines and
+incomplete deliverables. This software addresses these challenges by
+offering project creation, task assignment, and progress tracking
+functionalities.
+
+While the initial target audience is students, the system can be
+extended to other users (e.g., small teams or organizations) in the
+future.
+
+### 1.2 Scope
+
+The system is a **web-based task management application** built using
+the MERN stack (MongoDB, Express.js, React.js, Node.js).\
+- Users can register, log in, and manage multiple projects.\
+- Project owners can create projects, invite members, and assign roles
+(admin/member).\
+- Admins can create and manage tasks.\
+- Members can view tasks, mark them as complete, and add comments.\
+- A simple dashboard provides project progress visualization (progress
+bars).\
+- Notifications are available in-app, with key events (e.g.,
+invitations) sent via email.
+
+The system is intended for demo-scale usage (50--100 users), with future
+potential for deployment and expansion.
+
+### 1.3 Definitions, Acronyms, Abbreviations
+
+-   **MERN**: MongoDB, Express.js, React.js, Node.js\
+-   **API**: Application Programming Interface\
+-   **UI/UX**: User Interface / User Experience\
+-   **Owner**: Creator of a project with full control.\
+-   **Admin**: User with elevated privileges to manage tasks and
+    members.\
+-   **Member**: Regular user with basic task interaction permissions.
+
+### 1.4 References
+
+-   IEEE 830 Standard for Software Requirements Specification\
+-   Internal team brainstorming and requirements gathering
+
+### 1.5 Overview
+
+This document outlines the functional and non-functional requirements,
+system features, user classes, and constraints for the Task Management
+Software.
+
+------------------------------------------------------------------------
+
+## 2. Overall Description
+
+### 2.1 Product Perspective
+
+The product is a standalone web application built on the MERN stack. It
+does not depend on external systems but may later integrate with Google
+OAuth for authentication and optional email services for notifications.
+
+### 2.2 Product Functions
+
+-   User registration, login, and profile management\
+-   Project creation, invitation, and role assignment\
+-   Task creation, update, deletion, and completion marking\
+-   Task comments and file attachments\
+-   Dashboard with progress visualization\
+-   In-app notifications and email invitations
+
+### 2.3 User Classes and Characteristics
+
+-   **Owner**: Creates and manages the project, assigns roles.\
+-   **Admin**: Creates/updates/deletes tasks, manages members.\
+-   **Member**: Views tasks, marks assigned tasks complete, comments.
+
+### 2.4 Operating Environment
+
+-   Platform: Web application (desktop and mobile browsers)\
+-   Technology stack: React.js (Frontend), Node.js + Express.js
+    (Backend), MongoDB (Database)\
+-   Deployment: Local demo, with possible future online hosting (Heroku,
+    Vercel, etc.)
+
+### 2.5 Design and Implementation Constraints
+
+-   Must be implemented with the MERN stack\
+-   Styling to be done with Bootstrap\
+-   Initially designed for demo-scale use (≤100 users)
+
+### 2.6 User Documentation
+
+-   User guide/manual will be provided\
+-   Documentation lead responsible for SRS, design documents, and API
+    references
+
+### 2.7 Assumptions and Dependencies
+
+-   Users have basic internet and browser access\
+-   Email notifications depend on third-party email service integration\
+-   Possible future extension to mobile app
+
+------------------------------------------------------------------------
+
+## 3. Specific Requirements
+
+### 3.1 Functional Requirements
+
+1.  **Authentication**
+    -   Users can register and log in with email/password.\
+    -   Google OAuth login supported.\
+    -   Logout option available.
+2.  **User Management**
+    -   Update profile information (name, email, password, picture).\
+    -   Delete account.
+3.  **Project Management**
+    -   Create, edit, delete projects.\
+    -   Invite users to projects (email-based).\
+    -   Assign project roles (Owner/Admin/Member).\
+    -   Transfer ownership or change admin privileges.
+4.  **Task Management**
+    -   Add, edit, delete tasks.\
+    -   Assign tasks to members.\
+    -   Mark tasks as completed/in progress/pending.\
+    -   Attach files to tasks.\
+    -   Comment on tasks.
+5.  **Dashboard**
+    -   Display projects user is part of.\
+    -   Show progress per project using progress bars.
+6.  **Notifications**
+    -   In-app notifications for task assignment, completion, updates.\
+    -   Email notification for project invitations.
+
+### 3.2 Non-Functional Requirements
+
+-   **Performance**: Must support at least 50--100 users
+    simultaneously.\
+-   **Security**: Basic password hashing and role-based access control.\
+-   **Availability**: Designed for demo usage, not 24/7 reliability.\
+-   **Usability**: Simple, student-friendly UI.\
+-   **Scalability**: Should be extendable for future features.
+
+------------------------------------------------------------------------
+
+## 4. System Features (Detailed Use Cases)
+
+-   **UC1: Register/Login**: User creates account or logs in.\
+-   **UC2: Create Project**: Owner creates a project and invites
+    members.\
+-   **UC3: Assign Role**: Owner promotes/demotes admins.\
+-   **UC4: Manage Tasks**: Admin adds/updates/deletes tasks.\
+-   **UC5: Complete Task**: Member marks task as complete.\
+-   **UC6: Comment on Task**: Member/Admin adds comments to tasks.\
+-   **UC7: View Dashboard**: User sees project progress summary.\
+-   **UC8: Notifications**: User receives in-app and email
+    notifications.
+
+------------------------------------------------------------------------
+
+## 5. Other Requirements
+
+-   **Reliability**: Minimal downtime for demo.\
+-   **Maintainability**: Code should be modular and documented.\
+-   **Portability**: Should run on modern browsers (Chrome, Firefox,
+    Edge).
