@@ -1,5 +1,14 @@
 import mongoose from "mongoose";
 
+const commentSchema = new mongoose.Schema(
+    {
+        _id: { type: mongoose.Schema.Types.ObjectId, auto: true }, // unique id for each comment
+        authorId: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: true },
+        text: { type: String, required: true },
+    },
+    { timestamps: { createdAt: true, updatedAt: false } } // only track createdAt
+);
+
 const taskSchema = new mongoose.Schema(
     {
         projectId: { type: mongoose.Schema.Types.ObjectId, ref: "projects", required: true },
@@ -14,6 +23,7 @@ const taskSchema = new mongoose.Schema(
         },
         priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
         dueDate: { type: Date },
+        comments: [commentSchema],
     },
     {
         timestamps: { createdAt: true, updatedAt: false },
