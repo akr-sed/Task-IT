@@ -138,6 +138,34 @@ export const userRegistration = async (req, res) => {
   }
 };
 
+/**
+ * Email Verification Controller
+ * 
+ * Verifies the user's email by checking the verification code and converts
+ * the temporary user to a permanent user account.
+ * 
+ * Flow:
+ * 1. Validates that tempUserId and verification code are provided
+ * 2. Looks up the verification code in the Code collection
+ * 3. Retrieves the temporary user data
+ * 4. Creates a permanent User record with the temp user's data
+ * 5. Cleans up temporary records (TempUser and Code)
+ * 6. Passes user data to next middleware for session/token generation
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.tempUserId - ID of the temporary user record
+ * @param {string} req.body.verificationCode - 6-digit verification code
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {void} Calls next() middleware on success (typically tokenGenerator)
+ * 
+ * @status 200 - Handled by next middleware
+ * @status 400 - Missing fields, invalid code, or expired registration
+ * @status 500 - Internal server error
+ */
+
 export const verifyEmail = async (req, res, next) => {
   try {
     const { tempUserId, verificationCode } = req.body;
