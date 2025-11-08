@@ -59,4 +59,3 @@ tokenSchema.pre("save", async function (next) {
 });
 
 export default mongoose.model("Session", tokenSchema);
-

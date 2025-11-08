@@ -1,34 +1,45 @@
 import express from "express";
+
+// Controllers
 import {
-  userRegistration,
-  verifyEmail,
-  resendVerificationCode,
-  userLogin,
-  userLogout,
-  resetPassword,
-  verifyResetCode,
-  setNewPassword,
-  getUsersByIds,
-  getUser
+    userRegistration,
+    verifyEmail,
+    resendVerificationCode,
+    userLogin,
+    userLogout,
+    resetPassword,
+    verifyResetCode,
+    setNewPassword,
+    getUsersByIds,
+    getUser
 } from "../controllers/userController.js";
 
-import checkPassword from "../middlewares/passwordCheck.js"; // checks the password
-import tokenGenerator from "../utils/tokenGenerator.js"; // automatic generate a session
-import authService from "../middlewares/auth.js"; // get user info based on token
+// Middlewares & Utilities
+import checkPassword from "../middlewares/passwordCheck.js";
+import tokenGenerator from "../utils/tokenGenerator.js";
+import authService from "../middlewares/auth.js";
+
 const authRouter = express.Router();
-authRouter.post("/signup", userRegistration); // get user info based on token
+
+// User Registration & Email Verification
+authRouter.post("/signup", userRegistration);
 authRouter.post("/verify-email/", verifyEmail, tokenGenerator);
 authRouter.post(
-  "/verify-email/resend-verification-code/",
-  resendVerificationCode
+    "/verify-email/resend-verification-code/",
+    resendVerificationCode
 );
-authRouter.post("/batch" ,authService, getUsersByIds);
+
+// User Login & Logout
 authRouter.post("/login", checkPassword, userLogin, tokenGenerator);
-authRouter.post("/logout", userLogout); // todo: CHANGE THIS TO DELETE
+authRouter.post("/logout", userLogout);
+
+// Password Reset Flow
 authRouter.post("/reset-password", resetPassword);
 authRouter.post("/reset-password/verify", verifyResetCode);
 authRouter.post("/reset-password/new", setNewPassword, tokenGenerator);
+
+// User Data Retrieval (Protected)
+authRouter.post("/batch", authService, getUsersByIds);
 authRouter.get("/:userId", authService, getUser);
 
 export default authRouter;
-

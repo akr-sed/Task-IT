@@ -26,4 +26,3 @@ const codeSchema = new mongoose.Schema({
     });
 
 export default mongoose.model('Code', codeSchema);
-

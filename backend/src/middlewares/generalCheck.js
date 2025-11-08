@@ -7,4 +7,3 @@ export default (err, req, res) => {
         });
     } catch (err) {}
 };
-
