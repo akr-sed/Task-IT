@@ -14,9 +14,7 @@ incomplete deliverables. This software addresses these challenges by
 offering project creation, task assignment, and progress tracking
 functionalities.
 
-While the initial target audience is students, the system can be
-extended to other users (e.g., small teams or organizations) in the
-future.
+ While initially optimized for students managing coursework and group projects, the system is equally suited to small teams, freelancers, and lightweight projects that prioritize simplicity over complexity, enabling fast onboarding and clear visibility without heavy configuration or steep learning curves. This broader audience includes clubs, startups, agencies, and operational teams seeking a clean, minimal workflow for planning, assigning, and monitoring tasks with just enough structure to stay on schedule.​
 
 ### 1.2 Scope
 
