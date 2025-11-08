@@ -1,3 +1,6 @@
+
+
+
 /**
  * ========================================
  * USER CONTROLLER MODULE
@@ -85,9 +88,14 @@ import bcrypt from "bcrypt";
  * @status 400 - Missing required fields or email already registered
  * @status 500 - Internal server error
  */
+
 export const userRegistration = async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+
+    // Validate input
+   
 
     // Validate required fields
     if (!name || !email || !password) {
@@ -107,9 +115,13 @@ export const userRegistration = async (req, res) => {
       name,
       email,
       passwordHash: password, // Note: This will be hashed by the model's pre-save hook
+
     });
 
     await tempUser.save();
+
+
+   
 
     // Generate a random 6-digit verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
@@ -119,9 +131,11 @@ export const userRegistration = async (req, res) => {
       userId: tempUser._id,
       code: verificationCode,
       type: "register", // Indicates this code is for email verification
+
     });
 
     await code.save();
+
 
     // Send verification email to user
     await sendVerificationEmail(email, verificationCode, name);
@@ -701,3 +715,4 @@ export const getUser = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
