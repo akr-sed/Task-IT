@@ -65,3 +65,59 @@ Features enabling effective team collaboration within projects.
 - As a project member, I want to attach files to tasks, so that relevant documents are accessible in context.
 - As a user, I want to receive notifications about task assignments and mentions, so that I'm aware of activities requiring my attention.
 
+## Action Tasks
+
+### Authentication Implementation
+
+- Implement UI for user registration with email verification
+- Implement backend logic for user authentication against MongoDB
+- Create JWT token-based authentication system
+- Build password reset functionality with email notifications
+- Design and implement user profile management screens
+- Set up secure routes with proper authentication middleware
+
+### Project Management Implementation
+
+- Design database schema for projects with proper relationships
+- Create API endpoints for project CRUD operations
+- Design and implement project listing UI with filtering options
+- Build project details view with progress visualization
+- Implement project permissions and role management system
+
+### Task Management Implementation
+
+- Design task data model with necessary fields and relationships
+- Develop UI components for task creation and management
+- Build drag-and-drop interface for updating task status
+- Create backend endpoints for task CRUD operations
+- Implement task filtering and searching functionality
+- Design and build task assignment interface
+
+### Collaboration Features Implementation
+
+- Create invitation system with email notifications
+- Design and implement commenting functionality for tasks
+- Build file attachment system with storage integration
+- Implement user mentions with notifications
+- Create notification system
+
+## Prioritized Features for MVP (Minimum Viable Product)
+
+### High Priority (Must-Have)
+
+- User authentication (registration, login, password reset)
+- Basic project management (create, edit, delete)
+- Core task management (create, assign, update status)
+- Simple project member management
+
+### Medium Priority (Should-Have)
+
+- Task filtering and searching
+- Permissions and roles
+- Comments on tasks
+- Basic notifications
+
+### Lower Priority (Could-Have)
+
+- Project progress visualization
+- File attachments
