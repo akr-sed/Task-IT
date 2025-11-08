@@ -165,7 +165,6 @@ export const userRegistration = async (req, res) => {
  * @status 400 - Missing fields, invalid code, or expired registration
  * @status 500 - Internal server error
  */
-
 export const verifyEmail = async (req, res, next) => {
   try {
     const { tempUserId, verificationCode } = req.body;
@@ -223,6 +222,31 @@ export const verifyEmail = async (req, res, next) => {
   }
 };
 
+/**
+ * Resend Verification Code Controller
+ * 
+ * Allows users to request a new verification code if the original one expired
+ * or was lost. Invalidates any existing codes before generating a new one.
+ * 
+ * Flow:
+ * 1. Validates that tempUserId is provided
+ * 2. Finds the temporary user record
+ * 3. Deletes any existing verification codes for this user
+ * 4. Generates a new 6-digit verification code
+ * 5. Saves the new code
+ * 6. Resends verification email with the new code
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.tempUserId - ID of the temporary user record
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success message
+ * 
+ * @status 200 - Verification code resent successfully
+ * @status 400 - Missing tempUserId or user registration expired
+ * @status 500 - Internal server error
+ */
 export const resendVerificationCode = async (req, res) => {
   try {
     const { tempUserId } = req.body;
@@ -272,6 +296,30 @@ export const resendVerificationCode = async (req, res) => {
       .json({ message: "Server error while resending verification code" });
   }
 };
+
+/* ========================================
+ * LOGIN & LOGOUT
+ * ======================================== */
+
+/**
+ * User Login Controller
+ * 
+ * Handles user login authentication. The actual authentication logic is handled
+ * by middleware before this controller. This controller simply passes control
+ * to the next middleware (typically tokenGenerator).
+ * 
+ * Note: This is a pass-through controller. The actual login validation occurs
+ * in the authentication middleware chain before reaching this point.
+ * 
+ * @async
+ * @param {Object} req - Express request object (user should be authenticated by middleware)
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {void} Calls next() middleware on success
+ * 
+ * @status 200 - Handled by next middleware
+ * @status 500 - Internal server error
+ */
 export const userLogin = async (req, res, next) => {
   try {
     // Pass control to next middleware (e.g., token generation)
@@ -281,6 +329,30 @@ export const userLogin = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * User Logout Controller
+ * 
+ * Logs out a user by deleting their active session from the database.
+ * Requires a valid authentication token in the Authorization header.
+ * 
+ * Flow:
+ * 1. Extracts the token from the Authorization header
+ * 2. Looks up and deletes the session record in the database
+ * 3. Returns success if session was found and deleted
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.headers - Request headers
+ * @param {string} req.headers.authorization - Bearer token in format "Bearer <token>"
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with success or error message
+ * 
+ * @status 200 - Logged out successfully
+ * @status 400 - No token provided
+ * @status 404 - Session not found (possibly already logged out)
+ * @status 500 - Internal server error
+ */
 export const userLogout = async (req, res) => {
   try {
     // Extract token from Authorization header (format: "Bearer <token>")
@@ -303,6 +375,34 @@ export const userLogout = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/* ========================================
+ * PASSWORD RESET FLOW
+ * ======================================== */
+
+/**
+ * Reset Password Controller
+ * 
+ * Initiates the password reset process by sending a reset code to the user's email.
+ * Uses a security pattern where the response doesn't reveal if the email exists.
+ * 
+ * Flow:
+ * 1. Validates that email is provided
+ * 2. Looks up user by email
+ * 3. If user exists: deletes old reset codes, generates new 6-digit code, sends email
+ * 4. Returns same response whether user exists or not (security best practice)
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - User's email address
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with generic message
+ * 
+ * @status 200 - Reset code sent (or email doesn't exist, same response for security)
+ * @status 400 - Missing email
+ * @status 500 - Internal server error
+ */
 export const resetPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -344,6 +444,34 @@ export const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Verify Reset Code Controller
+ * 
+ * Verifies the password reset code and generates a temporary reset token
+ * that allows the user to set a new password.
+ * 
+ * Flow:
+ * 1. Validates that email and reset code are provided
+ * 2. Looks up user by email
+ * 3. Verifies the reset code matches and is not expired
+ * 4. Deletes the code to prevent reuse (one-time use)
+ * 5. Generates a cryptographically secure reset token
+ * 6. Stores hashed reset token with 15-minute expiry
+ * 7. Returns the plain reset token to the client
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.email - User's email address
+ * @param {string} req.body.resetCode - 6-digit reset code from email
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with userId and resetToken
+ * 
+ * @status 200 - Reset code verified, token generated
+ * @status 400 - Missing fields, invalid email, or invalid/expired code
+ * @status 500 - Internal server error
+ */
 export const verifyResetCode = async (req, res) => {
   try {
     const { email, resetCode } = req.body;
@@ -393,6 +521,34 @@ export const verifyResetCode = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Set New Password Controller
+ * 
+ * Allows users to set a new password after successfully verifying their reset code.
+ * Validates the reset token and ensures it hasn't expired before updating the password.
+ * 
+ * Flow:
+ * 1. Validates that userId, resetToken, and newPassword are provided
+ * 2. Looks up user and verifies reset token exists and hasn't expired
+ * 3. Compares provided reset token with hashed version in database
+ * 4. Updates user's password (will be hashed by model's pre-save hook)
+ * 5. Passes user data to next middleware for session/token generation
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string} req.body.userId - User's database ID
+ * @param {string} req.body.resetToken - Reset token from verifyResetCode
+ * @param {string} req.body.newPassword - New password to set
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {void} Calls next() middleware on success (typically tokenGenerator)
+ * 
+ * @status 200 - Handled by next middleware
+ * @status 400 - Missing fields, user not found, or invalid/expired token
+ * @status 500 - Internal server error
+ */
 export const setNewPassword = async (req, res, next) => {
   try {
     const { userId, resetToken, newPassword } = req.body;
@@ -443,6 +599,35 @@ export const setNewPassword = async (req, res, next) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/* ========================================
+ * USER DATA RETRIEVAL
+ * ======================================== */
+
+/**
+ * Get Users By IDs Controller
+ * 
+ * Retrieves multiple user records by their IDs. Excludes sensitive information
+ * like passwords and reset tokens for security.
+ * 
+ * Use case: Fetching user details for project members or collaborators
+ * 
+ * Flow:
+ * 1. Validates that userIds array is provided and not empty
+ * 2. Queries database for all matching user IDs
+ * 3. Returns user data excluding sensitive fields
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.body - Request body
+ * @param {string[]} req.body.userIds - Array of user IDs to retrieve
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with array of user objects
+ * 
+ * @status 200 - Users retrieved successfully
+ * @status 400 - Missing or invalid userIds array
+ * @status 500 - Internal server error
+ */
 export const getUsersByIds = async (req, res) => {
   try {
     const { userIds } = req.body;
@@ -464,6 +649,32 @@ export const getUsersByIds = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+
+/**
+ * Get User Controller
+ * 
+ * Retrieves a single user's information by their ID. Excludes sensitive information
+ * like passwords and reset tokens for security.
+ * 
+ * Use case: Fetching user profile details, viewing user information
+ * 
+ * Flow:
+ * 1. Validates that userId is provided in URL params
+ * 2. Queries database for user by ID
+ * 3. Returns user data excluding sensitive fields, or 404 if not found
+ * 
+ * @async
+ * @param {Object} req - Express request object
+ * @param {Object} req.params - URL parameters
+ * @param {string} req.params.userId - User ID to retrieve
+ * @param {Object} res - Express response object
+ * @returns {Object} JSON response with user object
+ * 
+ * @status 200 - User retrieved successfully
+ * @status 400 - Missing userId parameter
+ * @status 404 - User not found
+ * @status 500 - Internal server error
+ */
 export const getUser = async (req, res) => {
   try {
     const { userId } = req.params;
