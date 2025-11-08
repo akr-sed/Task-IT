@@ -6,15 +6,11 @@
 
 ### 1.1 Purpose
 
-The purpose of this software is to provide students with a task
-management platform designed to help them efficiently manage and
-organize their school projects. Many student projects lack proper
-management, coordination, and tracking, leading to missed deadlines and
-incomplete deliverables. This software addresses these challenges by
-offering project creation, task assignment, and progress tracking
-functionalities.
+The purpose of this software is to provide a simple, effective task and project management platform that helps users plan, coordinate, and track work from start to finish, reducing missed deadlines and incomplete deliverables through clear project creation, task assignment, and intuitive progress tracking.
 
- While initially optimized for students managing coursework and group projects, the system is equally suited to small teams, freelancers, and lightweight projects that prioritize simplicity over complexity, enabling fast onboarding and clear visibility without heavy configuration or steep learning curves. This broader audience includes clubs, startups, agencies, and operational teams seeking a clean, minimal workflow for planning, assigning, and monitoring tasks with just enough structure to stay on schedule.​
+Initially optimized for students managing coursework and group projects, the system is equally suited to small teams, freelancers, clubs, startups, agencies, and operational groups that value simplicity over complexity, enabling fast onboarding, minimal configuration, and clear visibility into who is doing what and when.
+
+By focusing on lightweight workflows—organizing projects, assigning tasks, setting due dates, and visualizing progress—the platform delivers just enough structure to keep work on schedule without burdening users with heavy processes, making it a practical fit for both academic and small-scale professional environments.
 
 ### 1.2 Scope
 
