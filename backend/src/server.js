@@ -34,4 +34,5 @@ connectDB().then(() => {
   });
 });
 
+app.use(generalCheck); // auto catch errors
 

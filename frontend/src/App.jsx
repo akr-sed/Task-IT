@@ -1,10 +1,12 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+
+// Import authentication components
+import SignupForm from "./components/authentication/SignupForm";
+import VerificationForm from "./components/authentication/VerificationForm";
+import LoginForm from "./components/authentication/LoginForm";
+import RequestPasswordResetForm from "./components/authentication/RequestPasswordResetForm";
+import PasswordResetFlow from "./components/authentication/PasswordResetFlow";
 
 // Auth check
 const isAuthenticated = () => {
@@ -35,40 +37,52 @@ function App() {
         {/* ============================================ */}
         {/* PUBLIC ROUTES (Outside MainLayout)          */}
         {/* ============================================ */}
-
+        
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-
+        
         {/* Authentication routes */}
         <Route
           path="/signup"
-          element={<PublicRoute>{/* <SignupForm /> */}</PublicRoute>}
+          element={
+            <PublicRoute>
+              <SignupForm />
+            </PublicRoute>
+          }
         />
         <Route
           path="/verify"
-          element={<PublicRoute>{/* <VerificationForm /> */}</PublicRoute>}
+          element={
+            <PublicRoute>
+              <VerificationForm />
+            </PublicRoute>
+          }
         />
         <Route
           path="/login"
-          element={<PublicRoute>{/* <LoginForm /> */}</PublicRoute>}
+          element={
+            <PublicRoute>
+              <LoginForm />
+            </PublicRoute>
+          }
         />
-
+        
         {/* Password Reset Flow */}
         <Route
           path="/reset-password"
           element={
-            <PublicRoute>{/* <RequestPasswordResetForm /> */}</PublicRoute>
+            <PublicRoute>
+              <RequestPasswordResetForm />
+            </PublicRoute>
           }
         />
         <Route
           path="/verify-reset"
-          element={<PublicRoute>{/* <PasswordResetFlow /> */}</PublicRoute>}
-        />
-
-        {/* Special invitation route (handles auth internally, full-page design) */}
-        <Route
-          path="/projects/:projectId/invite/:inviteId/:code"
-          // element={<AcceptInvite />}
+          element={
+            <PublicRoute>
+              <PasswordResetFlow />
+            </PublicRoute>
+          }
         />
 
         {/* ============================================ */}
