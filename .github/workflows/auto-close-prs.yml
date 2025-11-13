@@ -16,4 +16,3 @@ jobs:
         with:
           issue-inactive-days: 0
           pr-inactive-days: 0
-          skip-closed-prs: false
