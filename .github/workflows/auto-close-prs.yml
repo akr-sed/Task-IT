@@ -14,6 +14,6 @@ jobs:
       - name: Lock this PR
         uses: dessant/lock-threads@v5
         with:
-          issue-inactive-days: -1
-          pr-inactive-days: -1
+          issue-inactive-days: 0
+          pr-inactive-days: 0
           skip-closed-prs: false
