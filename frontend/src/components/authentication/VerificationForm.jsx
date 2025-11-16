@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import axios from "axios";
+import { authService } from '../../api';
 import taskit from '../../assets/icons/task-it.svg';
 
 const VerificationForm = () => {
@@ -89,39 +89,19 @@ const VerificationForm = () => {
     setError("");
 
     try {
-      const deviceInfo = {
-        deviceId: localStorage.getItem("deviceId") || (() => {
-          const id = crypto.randomUUID();
-          localStorage.setItem("deviceId", id);
-          return id;
-        })(),
-        deviceName: navigator.userAgentData?.brands?.[0]?.brand || navigator.userAgent,
-        deviceOsVersion: navigator.userAgentData?.platform || navigator.platform || "Unknown OS",
-      };
+      const data = await authService.verifyEmail({
+        tempUserId,
+        verificationCode: code,
+      });
 
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/verify-email",
-        {
-          tempUserId,
-          verificationCode: code,
-        },
-        {
-          headers: {
-            "X-Device-Id": deviceInfo.deviceId,
-            "X-Device-Name": deviceInfo.deviceName,
-            "X-Device-OsVersion": deviceInfo.deviceOsVersion,
-          }
-        }
-      );
-
-      localStorage.setItem("token", response.data.token);
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       navigate("/dashboard", {
         state: { message: "Email verified successfully! Welcome to Task IT." },
       });
     } catch (error) {
-      setError(error.response?.data?.message || "Verification failed. Please try again.");
+      setError(error.response?.data?.message || error.response?.data?.error || "Verification failed. Please try again.");
       setVerificationCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -137,17 +117,14 @@ const VerificationForm = () => {
     setError("");
 
     try {
-      await axios.post(
-        "http://localhost:5000/api/auth/verify-email/resend-verification-code",
-        { tempUserId }
-      );
+      await authService.resendVerificationCode(tempUserId);
       setResendSuccess(true);
       setCountdown(60);
       setCanResend(false);
       
       setTimeout(() => setResendSuccess(false), 5000);
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to resend verification code");
+      setError(error.response?.data?.message || error.response?.data?.error || "Failed to resend verification code");
     } finally {
       setResendLoading(false);
     }
@@ -346,4 +323,3 @@ const VerificationForm = () => {
 };
 
 export default VerificationForm;
-

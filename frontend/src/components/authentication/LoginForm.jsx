@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { authService } from '../../api';
 import background from '../../assets/images/Frame14main.svg';
 import taskit from '../../assets/icons/task-it.svg';
 
@@ -19,48 +19,13 @@ function LoginForm() {
     setError("");
 
     try {
-      // Device info for tracking
-      const deviceInfo = {
-        // Generate a random or persistent ID for session/device tracking
-        deviceId:
-          localStorage.getItem("deviceId") ||
-          (() => {
-            const id = crypto.randomUUID(); // modern browsers support this
-            localStorage.setItem("deviceId", id);
-            return id;
-          })(),
-
-        // Browser name
-        deviceName:
-          navigator.userAgentData?.brands?.[0]?.brand || navigator.userAgent,
-
-        // OS info
-        deviceOsVersion:
-          navigator.userAgentData?.platform ||
-          navigator.platform ||
-          "Unknown OS",
-      };
-
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/login",
-        {
-          email,
-          password,
-        },
-        {
-          headers: {
-            "X-Device-Id": deviceInfo.deviceId,
-            "X-Device-Name": deviceInfo.deviceName,
-            "X-Device-OsVersion": deviceInfo.deviceOsVersion,
-          },
-        }
-      );
+      const data = await authService.login({ email, password });
 
       // Store token in localStorage
-      localStorage.setItem("token", response.data.token);
+      localStorage.setItem("token", data.token);
 
       // Store basic user info in localStorage
-      localStorage.setItem("user", JSON.stringify(response.data.user));
+      localStorage.setItem("user", JSON.stringify(data.user));
 
       sessionStorage.setItem("justLoggedIn", "true");
 
@@ -75,7 +40,7 @@ function LoginForm() {
     } catch (err) {
       console.error("Login error:", err);
       setError(
-        err.response?.data?.message || "Login failed. Please try again."
+        err.response?.data?.message || err.response?.data?.error || "Login failed. Please try again."
       );
     } finally {
       setLoading(false);
@@ -272,4 +237,3 @@ function LoginForm() {
 }
 
 export default LoginForm;
-

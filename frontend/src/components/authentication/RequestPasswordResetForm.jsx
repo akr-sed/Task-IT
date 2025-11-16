@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { authService } from '../../api';
 import taskit from "../../assets/icons/task-it.svg";
 
 const RequestPasswordResetForm = () => {
@@ -17,12 +17,8 @@ const RequestPasswordResetForm = () => {
     setMessage("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
-        { email }
-      );
-
-      setMessage(response.data.message);
+      const data = await authService.requestPasswordReset(email);
+      setMessage(data.message);
 
       // Navigate to verification page after short delay
       setTimeout(() => {
@@ -30,7 +26,7 @@ const RequestPasswordResetForm = () => {
       }, 2000);
     } catch (err) {
       setError(
-        err.response?.data?.message || "Failed to request password reset"
+        err.response?.data?.message || err.response?.data?.error || "Failed to request password reset"
       );
     } finally {
       setLoading(false);
@@ -366,4 +362,3 @@ const RequestPasswordResetForm = () => {
 };
 
 export default RequestPasswordResetForm;
-

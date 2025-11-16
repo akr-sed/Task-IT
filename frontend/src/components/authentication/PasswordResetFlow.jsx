@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import { authService } from '../../api';
 import taskit from '../../assets/icons/task-it.svg';
 
 const PasswordResetFlow = () => {
@@ -103,13 +103,13 @@ const PasswordResetFlow = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password/verify",
-        { email, resetCode: code }
-      );
+      const data = await authService.verifyResetCode({
+        email,
+        resetCode: code
+      });
 
-      setUserId(response.data.userId);
-      setResetToken(response.data.resetToken);
+      setUserId(data.userId);
+      setResetToken(data.resetToken);
       setMessage("Code verified successfully! You can now set your new password.");
       
       setTimeout(() => {
@@ -118,7 +118,7 @@ const PasswordResetFlow = () => {
       }, 1500);
     } catch (err) {
       console.error("Verification error:", err);
-      setError(err.response?.data?.message || "Failed to verify reset code");
+      setError(err.response?.data?.message || err.response?.data?.error || "Failed to verify reset code");
       setResetCode(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
@@ -133,14 +133,14 @@ const PasswordResetFlow = () => {
     setError("");
 
     try {
-      await axios.post("http://localhost:5000/api/auth/reset-password", { email });
+      await authService.requestPasswordReset(email);
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 5000);
       setMessage("A new verification code has been sent to your email");
       setResendTimer(60);
       setTimeout(() => setMessage(""), 3000);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to resend verification code");
+      setError(err.response?.data?.message || err.response?.data?.error || "Failed to resend verification code");
     } finally {
       setResendLoading(false);
     }
@@ -173,31 +173,15 @@ const PasswordResetFlow = () => {
     setMessage("");
 
     try {
-      const deviceInfo = {
-        deviceId: localStorage.getItem("deviceId") || (() => {
-          const id = crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
-          localStorage.setItem("deviceId", id);
-          return id;
-        })(),
-        deviceName: navigator.userAgentData?.brands?.[0]?.brand || navigator.userAgent,
-        deviceOsVersion: navigator.userAgentData?.platform || navigator.platform || "Unknown OS",
-      };
+      const data = await authService.setNewPassword({
+        userId,
+        resetToken,
+        newPassword
+      });
 
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password/new",
-        { userId, resetToken, newPassword },
-        {
-          headers: {
-            "X-Device-Id": deviceInfo.deviceId,
-            "X-Device-Name": deviceInfo.deviceName,
-            "X-Device-OsVersion": deviceInfo.deviceOsVersion,
-          },
-        }
-      );
-
-      if (response.data.token && response.data.user) {
-        localStorage.setItem("token", response.data.token);
-        localStorage.setItem("user", JSON.stringify(response.data.user));
+      if (data.token && data.user) {
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
         setMessage("Password reset successful! You will be logged in automatically.");
         
         setTimeout(() => {
@@ -211,7 +195,7 @@ const PasswordResetFlow = () => {
       }
     } catch (err) {
       console.error("Password reset error:", err);
-      setError(err.response?.data?.message || "Failed to set new password");
+      setError(err.response?.data?.message || err.response?.data?.error || "Failed to set new password");
     } finally {
       setLoading(false);
     }
@@ -309,7 +293,7 @@ const PasswordResetFlow = () => {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
               <div className="flex items-start gap-3">
-                <svg className="w-5 h-5 text-red-500 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
                 <p className="text-sm text-red-700">{error}</p>
@@ -560,4 +544,3 @@ const PasswordResetFlow = () => {
 };
 
 export default PasswordResetFlow;
-
