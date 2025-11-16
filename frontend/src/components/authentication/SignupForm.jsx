@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import { authService } from '../../api';
 import taskit from '../../assets/icons/task-it.svg';
 
 const SignupForm = () => {
@@ -26,15 +26,12 @@ const SignupForm = () => {
     setError("");
 
     try {
-      const response = await axios.post(
-        "http://localhost:5000/api/auth/signup",
-        formData
-      );
+      const data = await authService.signup(formData);
       setSuccess(true);
-      setTempUserId(response.data.tempUser._id);
+      setTempUserId(data.tempUser._id);
     } catch (error) {
       setError(
-        error.response?.data?.message || "An error occurred during signup"
+        error.response?.data?.message || error.response?.data?.error || "An error occurred during signup"
       );
     } finally {
       setLoading(false);
@@ -333,4 +330,3 @@ const SignupForm = () => {
 };
 
 export default SignupForm;
-
