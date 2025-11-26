@@ -11,7 +11,35 @@ dotenv.config();
 ────────────────────────────────────────────── */
 // Create new project
 export async function createProject(req, res) {
-    // todo: create a project POST method ( all params are inside body )
+    try {
+        const { name, displayName, description } = req.body;
+        if (!name) {
+            return res.status(400).json({
+                error: "Project name is required",
+            });
+        }
+        // check if project name already exists
+        const existingProject = await Project.findOne({ name });
+        if (existingProject) {
+            return res.status(400).json({ error: "Project name already exists" });
+        }
+
+        const newProject = new Project({
+            ownedBy: req.userId,
+            createdBy: req.userId,
+            name,
+            displayName,
+            description,
+        });
+
+        await newProject.save();
+        res
+            .status(201)
+            .json({ message: "Project created successfully", project: newProject });
+    } catch (error) {
+        console.error("Error creating project:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
 }
 
 // Edit project details

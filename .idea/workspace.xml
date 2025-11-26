@@ -4,11 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="e02a3962-e843-4faa-bf54-74a1c0780904" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/backend/src/middlewares/projectPermission.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/controllers/projectController.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/controllers/projectController.js" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/backend/src/routes/projectRoutes.js" beforeDir="false" afterPath="$PROJECT_DIR$/backend/src/routes/projectRoutes.js" afterDir="false" />
-    </list>
+    <list default="true" id="e02a3962-e843-4faa-bf54-74a1c0780904" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -95,7 +91,7 @@
       <workItem from="1762992882841" duration="7000" />
       <workItem from="1762992898830" duration="331000" />
       <workItem from="1762993891345" duration="20000" />
-      <workItem from="1763833546935" duration="1071000" />
+      <workItem from="1763833546935" duration="1522000" />
     </task>
     <servers />
   </component>
