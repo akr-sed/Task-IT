@@ -2,6 +2,7 @@ import Project from "../models/project.js";
 import User from "../models/user.js";
 
 import dotenv from "dotenv";
+import Invite from "../models/invite.js";
 dotenv.config();
 
 /** PLEASE REVIEW PROJECT ROUTES BEFORE IMPLEMENTING THIS FILE */
@@ -73,8 +74,19 @@ export async function editProject(req, res) {
 
 // Delete project
 export async function deleteProject(req, res) {
-    // todo: delete the project ( must verify password through a middleware )
-}
+    if (req.permissionLevel !== 3)
+        return res
+            .status(403)
+            .json({ message: "You do not have permission to delete this project" });
+    try {
+        const project = req.project; // Retrieved from permission middleware
+        await Project.findByIdAndDelete(project._id);
+        await Invite.deleteMany({ projectId: project._id });
+        res.status(200).json({ message: "Project deleted successfully" });
+    } catch (error) {
+        console.error("Error deleting project:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }}
 
 
 /* ──────────────────────────────────────────────
