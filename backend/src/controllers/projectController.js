@@ -44,8 +44,31 @@ export async function createProject(req, res) {
 
 // Edit project details
 export async function editProject(req, res) {
-    // todo: edit project info ( display name , description )
     // only admin can edit
+    if (req.permissionLevel < 2)
+        return res
+            .status(403)
+            .json({ message: "You do not have permission to edit this project" });
+    const { name, displayName, description } = req.body;
+    const project = req.project; // Retrieved from permission middleware
+
+    if (!name && !displayName && !description) {
+        return res.status(400).json({ error: "Nothing to update" });
+    }
+    const existingProject = await Project.findOne({ name });
+    if (
+        existingProject &&
+        existingProject._id.toString() !== project._id.toString()
+    )
+        return res.status(400).json({ error: "Project name already exists" });
+
+    // Update fields if provided
+    if (name) project.name = name;
+    if (displayName) project.displayName = displayName;
+    if (description) project.description = description;
+
+    await project.save();
+    res.status(200).json({ message: "Project updated successfully", project });
 }
 
 // Delete project
