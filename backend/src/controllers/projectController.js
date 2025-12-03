@@ -219,6 +219,59 @@ export async function deleteUser(req, res) {
     }
 }
 
+// Transfer ownership
+export async function transferOwner(req, res) {
+    // todo: transfer ownership ( password check first )
+    if (req.permissionLevel !== 3)
+        return res
+            .status(403)
+            .json({ message: "You do not have permission to transfer ownership" });
+    try {
+        const { newOwnerId } = req.body;
+        const project = req.project; // Retrieved from permission middleware
+        const newOwnerMember = project.members.find(
+            (m) => m.id?.toString() === newOwnerId.toString()
+        );
+
+        if (!newOwnerMember) {
+            return res
+                .status(404)
+                .json({ message: "New owner must be a member of the project" });
+        }
+
+        // Update ownership
+        // Store current owner ID before changing ownership
+        const previousOwnerId = project.ownedBy;
+
+        // Update ownership
+        project.ownedBy = newOwnerId;
+
+        // Remove the new owner from members array
+        project.members = project.members.filter(
+            (member) => member.id.toString() !== newOwnerId.toString()
+        );
+
+        // Change previous owner's role to admin
+        const previousOwnerMemberIndex = project.members.findIndex(
+            (member) => member.id.toString() === previousOwnerId.toString()
+        );
+
+        // If previous owner wasn't in members list already, add them
+
+        project.members.push({
+            id: previousOwnerId,
+            role: "admin",
+        });
+
+        await project.save();
+        res
+            .status(200)
+            .json({ message: "Project ownership transferred successfully", project });
+    } catch (error) {
+        console.error("Error transferring project ownership:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
 /* ──────────────────────────────────────────────
    Export as grouped object
