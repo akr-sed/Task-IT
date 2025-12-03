@@ -98,7 +98,23 @@ export async function getProject(req, res) {
     res.status(200).json({ project: req.project });
 }
 
+// Fetch all projects for the authenticated user
+export async function fetchProjects(req, res) {
+    try {
+        const userId = req.userId;
+        const projects = await Project.find({
+            $or: [
+                { ownedBy: userId }, // if your field is called ownedBy (based on your earlier code)
+                { "members.id": userId },
+            ],
+        });
 
+        res.status(200).json({ projects });
+    } catch (error) {
+        console.error("Error fetching projects:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
 
 /* ──────────────────────────────────────────────
    Export as grouped object
