@@ -225,7 +225,7 @@ export async function invite(
     res
     // , next
 ) {
-    // todo: invite via sending an email either he provides a user id and then we fetch the email , or he sends an email
+    // invite via sending an email either he provides a user id and then we fetch the email , or he sends an email
     try {
         if (req.permissionLevel !== 3)
             return res.status(403).json({
@@ -378,6 +378,71 @@ export async function acceptInvite(req, res) {
         return res.status(500).json({ message: "Failed to accept invitation" });
     }
 }
+
+export async function declineInvite(req, res) {
+    try {
+        const { projectId, inviteId, code } = req.params;
+
+        // Find the invitation in the database
+        const invite = await Invite.findById(inviteId);
+
+        // Check if invitation exists
+        if (!invite) {
+            return res
+                .status(404)
+                .json({ message: "Invitation not found or already expired" });
+        }
+
+        // Verify the project ID matches the invitation
+        if (invite.projectId.toString() !== projectId) {
+            return res.status(400).json({ message: "Invalid invitation details" });
+        }
+
+        // Get current user from auth middleware
+        const currentUserId = req.userId;
+        const user = req.user || (await User.findById(currentUserId));
+
+        if (!user) {
+            return res.status(401).json({ message: "Authentication required" });
+        }
+
+        // Verify that the invitation was sent to this user
+        const isInvitedUser =
+            (invite.invitedUserId &&
+                invite.invitedUserId.toString() === currentUserId) ||
+            (invite.invitedEmail && invite.invitedEmail === user.email);
+
+        if (!isInvitedUser) {
+            return res.status(403).json({
+                message: "You are not authorized to decline this invitation",
+            });
+        }
+
+        // Get project details for the response
+        const project = await Project.findById(projectId);
+        if (!project) {
+            await Invite.findByIdAndDelete(inviteId);
+
+            return res.status(404).json({ message: "Project no longer exists" });
+        }
+
+        // Delete the invitation
+        await Invite.findByIdAndDelete(inviteId);
+
+        // Return success response
+        return res.status(200).json({
+            message: `You have successfully declined the invitation to ${project.name}`,
+            project: {
+                id: project._id,
+                name: project.name,
+            },
+        });
+    } catch (error) {
+        console.error("Error declining invitation:", error);
+        return res.status(500).json({ message: "Failed to decline invitation" });
+    }
+}
+
 
 // Transfer ownership
 export async function transferOwner(req, res) {
