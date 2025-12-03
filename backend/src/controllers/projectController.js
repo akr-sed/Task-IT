@@ -116,6 +116,43 @@ export async function fetchProjects(req, res) {
     }
 }
 
+// Update member role
+export async function updateRole(req, res) {
+    try {
+        const { memberId } = req.params;
+        const { role } = req.body;
+
+        if (req.permissionLevel !== 3)
+            return res
+                .status(403)
+                .json({ message: "You do not have permission to update member roles" });
+
+        const project = req.project; // Retrieved from permission middleware
+
+        const member = project.members.find(
+            (m) => m.id?.toString() === memberId.toString()
+        );
+
+        if (!member) {
+            return res
+                .status(404)
+                .json({ message: "Member not found in this project" });
+        }
+
+        member.role = role;
+        await project.save();
+
+        res
+            .status(200)
+            .json({ message: "Member role updated successfully", project });
+    } catch (error) {
+        console.error("Error updating member role:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+}
+
+
+
 /* ──────────────────────────────────────────────
    Export as grouped object
 ────────────────────────────────────────────── */
