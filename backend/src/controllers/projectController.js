@@ -88,6 +88,17 @@ export async function deleteProject(req, res) {
         res.status(500).json({ error: "Internal server error" });
     }}
 
+// Get project details
+export async function getProject(req, res) {
+    if (req.permissionLevel === 0)
+        return res
+            .status(403)
+            .json({ message: "You do not have access to this project" });
+
+    res.status(200).json({ project: req.project });
+}
+
+
 
 /* ──────────────────────────────────────────────
    Export as grouped object
