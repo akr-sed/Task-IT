@@ -151,6 +151,73 @@ export async function updateRole(req, res) {
     }
 }
 
+export async function deleteUser(req, res) {
+    if (req.permissionLevel < 2)
+        return res.status(403).json({
+            message: "You do not have permission to remove members from this project",
+        });
+
+    try {
+        const { userId } = req.params;
+
+        // Ensure we have valid IDs
+        if (!userId) {
+            return res.status(400).json({ message: "User ID is required" });
+        }
+
+        // Check permissions
+        if (req.permissionLevel < 2) {
+            return res.status(403).json({
+                message:
+                    "You do not have permission to remove members from this project",
+            });
+        }
+
+        // Get fresh project data to avoid concurrency issues
+        const project = req.project; // Retrieved from permission middleware
+
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+
+        // Convert IDs to strings for accurate comparison
+        const memberIndex = project.members.findIndex(
+            (m) => m.id && m.id.toString() === userId.toString()
+        );
+
+        if (memberIndex === -1) {
+            return res
+                .status(404)
+                .json({ message: "Member not found in this project" });
+        }
+
+        // Remove the member using array splice method
+        project.members.splice(memberIndex, 1);
+
+        // Save the updated project
+        const updatedProject = await project.save();
+
+        // Confirm the member was actually removed
+        const memberStillExists = updatedProject.members.some(
+            (m) => m.id && m.id.toString() === userId.toString()
+        );
+
+        if (memberStillExists) {
+            return res.status(500).json({
+                message: "Failed to remove member from project",
+            });
+        }
+
+        // Return success response
+        res.status(200).json({
+            message: "Member removed successfully",
+            project: updatedProject,
+        });
+    } catch (error) {
+        console.error("Error removing member from project:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+}
 
 
 /* ──────────────────────────────────────────────
