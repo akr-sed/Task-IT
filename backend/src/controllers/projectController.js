@@ -219,6 +219,94 @@ export async function deleteUser(req, res) {
     }
 }
 
+// Send project invite
+export async function invite(
+    req,
+    res
+    // , next
+) {
+    // todo: invite via sending an email either he provides a user id and then we fetch the email , or he sends an email
+    try {
+        if (req.permissionLevel !== 3)
+            return res.status(403).json({
+                message: "You don't have permission to invite users to this project",
+            });
+        const project = req.project; // Retrieved from permission middleware
+
+        const { email } = req.body;
+        if (!email) {
+            return res.status(400).json({
+                message: "Email must be provided for invitation",
+            });
+        }
+        const user = await User.findOne({ email });
+
+        if (!user) {
+            return res
+                .status(404)
+                .json({ message: "User with this email does not exist" });
+        }
+        if (user._id.toString() === project.ownedBy.toString())
+            return res
+                .status(400)
+                .json({ message: "you cannot send an invite to yourself" });
+
+        let invitedUser = user;
+        let invitedEmail = email;
+
+        // Check if user is already a member
+        if (invitedUser) {
+            const isMember = project.members.some(
+                (member) => member.id?.toString() === invitedUser._id.toString()
+            );
+
+            if (isMember) {
+                return res
+                    .status(400)
+                    .json({ message: "User is already a member of this project" });
+            }
+        }
+
+        // Generate a unique invite code
+        const inviteCode =
+            Math.random().toString(36).substring(2, 15) +
+            Math.random().toString(36).substring(2, 15);
+
+        // Create an invitation record
+        const invite = new Invite({
+            projectId: project._id,
+            invitedUserId: user._id || null,
+            invitedEmail: invitedEmail,
+            invitedBy: req.project.ownedBy,
+            inviteCode: inviteCode,
+        });
+
+        await invite.save();
+
+        // Create the invitation link
+        const baseUrl = process.env.FRONTEND_URL || "http://localhost:5173";
+        const inviteLink = `${baseUrl}/projects/${project._id}/invite/${invite._id}/${inviteCode}`;
+
+        // Send invitation email
+
+        await sendProjectInvitation(
+            invitedEmail,
+            inviteCode,
+            invitedUser?.name || "there", // Use user's name or generic greeting
+            project.name,
+            "taskit Team",
+            inviteLink
+        );
+
+        return res.status(200).json({
+            message: "Invitation sent successfully",
+        });
+    } catch (error) {
+        console.error("Error sending project invitation:", error);
+        return res.status(500).json({ message: "Failed to send invitation" });
+    }
+}
+
 // Transfer ownership
 export async function transferOwner(req, res) {
     // todo: transfer ownership ( password check first )
