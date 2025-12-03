@@ -307,6 +307,78 @@ export async function invite(
     }
 }
 
+// Accept project invite
+export async function acceptInvite(req, res) {
+    const { inviteId, inviteCode } = req.params;
+    if (!inviteId || !inviteCode) {
+        return res.status(400).json({ message: "Invalid invite link" });
+    }
+
+    try {
+        const invite = await Invite.findById(inviteId);
+        if (!invite) {
+            return res.status(404).json({ message: "Invitation not found" });
+        }
+        if (invite.inviteCode !== inviteCode) {
+            return res.status(400).json({ message: "Invalid invite code" });
+        }
+        const project = await Project.findById(invite.projectId);
+        if (!project) {
+            return res.status(404).json({ message: "Project not found" });
+        }
+        const userId = req.userId;
+
+        // Check if the invitation is for this user
+        if (
+            invite.invitedUserId &&
+            invite.invitedUserId.toString() !== userId.toString()
+        ) {
+            return res
+                .status(403)
+                .json({ message: "This invitation is not for your account" });
+        }
+
+        // If invitation was sent by email, check if current user's email matches
+        if (invite.invitedEmail) {
+            const user = await User.findById(userId);
+            if (!user || user.email !== invite.invitedEmail) {
+                return res
+                    .status(403)
+                    .json({
+                        message: "This invitation is for a different email address",
+                    });
+            }
+        }
+
+        // Check if user is already a member
+        const isMember = project.members.some(
+            (member) => member.id?.toString() === userId.toString()
+        );
+
+        if (isMember) {
+            return res
+                .status(400)
+                .json({ message: "You are already a member of this project" });
+        }
+
+        // Add user to project members
+        project.members.push({
+            id: userId,
+            role: "member", // Default role for invited users
+        });
+        await project.save();
+        // Delete the invitation after it's used
+        await Invite.findByIdAndDelete(inviteId);
+
+        res
+            .status(200)
+            .json({ message: "Invitation accepted successfully", project });
+    } catch (error) {
+        console.error("Error accepting project invitation:", error);
+        return res.status(500).json({ message: "Failed to accept invitation" });
+    }
+}
+
 // Transfer ownership
 export async function transferOwner(req, res) {
     // todo: transfer ownership ( password check first )
