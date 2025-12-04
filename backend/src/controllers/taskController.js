@@ -114,3 +114,26 @@ export async function fetchTask(req, res) {
     return res.status(500).json({ message: "internal server error" });
   }
 }
+
+// Delete task
+export async function deleteTask(req, res) {
+  if (req.permissionLevel < 2) {
+    return res
+      .status(403)
+      .json({ message: "Insufficient permissions to delete a task." });
+  }
+
+  try {
+    // fetch task from request
+    const task = req.task;
+
+    // no need for additional check since the middleware already did it
+
+    await Task.findByIdAndDelete(task._id);
+
+    return res.status(200).json({ message: "Task deleted successfully." });
+  } catch (error) {
+    console.error("Error in the deleteTask controller:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
