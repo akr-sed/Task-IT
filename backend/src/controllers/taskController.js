@@ -224,3 +224,27 @@ export async function updateTaskStatus(req, res) {
     return res.status(500).json({ message: "internal server error" });
   }
 }
+
+// list project tasks
+export async function listTasksOfProject(req, res) {
+  try {
+    const { projectId } = req.params;
+    const userId = req.userId;
+
+    const belongs = await checkIfUserBelongsToProject({
+      projectId: projectId,
+      userId: userId,
+    });
+
+    if (!belongs)
+      return res
+        .status(403)
+        .json({ message: "you are not a member of this project" });
+    const tasks = await Task.find({ projectId: projectId });
+    return res.status(200).json({ tasks: tasks });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error fetching tasks", error: error.message });
+  }
+}
