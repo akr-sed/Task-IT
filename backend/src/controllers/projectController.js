@@ -443,6 +443,48 @@ export async function declineInvite(req, res) {
     }
 }
 
+// Get invitation details
+export async function getInvitation(req, res) {
+    try {
+        const { inviteId } = req.params;
+
+        if (!inviteId) {
+            return res.status(400).json({ message: "Invitation ID is required" });
+        }
+
+        // Find the invitation
+        const invite = await Invite.findById(inviteId);
+        if (!invite) {
+            return res
+                .status(404)
+                .json({ message: "Invitation not found or expired" });
+        }
+
+        // Find the project
+        const project = await Project.findById(invite.projectId);
+        if (!project) {
+            return res.status(404).json({ message: "Project no longer exists" });
+        }
+
+        // Find the inviter
+        const inviter = await User.findById(invite.invitedBy);
+
+        return res.status(200).json({
+            invitation: {
+                id: invite._id,
+                projectId: project._id,
+                projectName: project.name,
+                inviterName: inviter ? inviter.name : "A Taskit user",
+                invitedEmail: invite.invitedEmail,
+            },
+        });
+    } catch (error) {
+        console.error("Error getting invitation details:", error);
+        return res
+            .status(500)
+            .json({ message: "Failed to retrieve invitation details" });
+    }
+}
 
 // Transfer ownership
 export async function transferOwner(req, res) {
