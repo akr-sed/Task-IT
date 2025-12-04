@@ -305,3 +305,79 @@ export async function comment(req, res) {
             .json({ message: "Error writing a comment", error: error.message });
     }
 }
+
+// delete comment
+export async function deleteComment(req, res) {
+    // Check membership first
+    if (req.permissionLevel === 0)
+        return res
+            .status(403)
+            .json({ message: "You are not a member of this project" });
+
+    try {
+        const userId = req.userId; // from middleware
+        const task = req.task; // from middleware
+        const { commentId } = req.params; // assuming route: /tasks/:taskId/comments/:commentId
+
+        // Find comment by id
+        const comment = task.comments.id(commentId);
+
+        if (!comment) {
+            return res.status(404).json({ message: "Comment not found" });
+        }
+
+        // Check permission: only author or manager/admin can delete
+        if (comment.authorId.toString() !== userId && req.permissionLevel < 2) {
+            return res
+                .status(403)
+                .json({ message: "You do not have permission to delete this comment" });
+        }
+
+        // Remove comment
+        comment.deleteOne();
+
+        // Save task
+        await task.save();
+
+        return res.status(200).json({ message: "Comment deleted successfully" });
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Error deleting comment", error: error.message });
+    }
+}
+
+export async function getComments(req, res) {
+    // Check membership first
+    if (req.permissionLevel === 0)
+        return res
+            .status(403)
+            .json({ message: "You are not a member of this project" });
+
+    try {
+        const task = req.task; // from middleware
+
+        return res.status(200).json({ comments: task.comments });
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Error fetching comments", error: error.message });
+    }
+}
+
+/* ──────────────────────────────────────────────
+   Export as grouped object
+────────────────────────────────────────────── */
+export default {
+  createTask,
+  editTask,
+  deleteTask,
+  assignTask,
+  updateTaskStatus,
+  listTasksOfProject,
+  listTasks,
+    comment,
+    deleteComment
+};
