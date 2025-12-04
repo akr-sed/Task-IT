@@ -261,3 +261,47 @@ export async function listTasks(req, res) {
       .json({ message: "Error fetching tasks", error: error.message });
   }
 }
+
+export async function comment(req, res) {
+    // Check membership first
+    if (req.permissionLevel === 0)
+        return res
+            .status(403)
+            .json({ message: "You are not a member of this project" });
+
+    try {
+        const userId = req.userId; // from middleware
+        const task = req.task; // from middleware
+        const { text } = req.body;
+
+        // Validate input
+        if (!text || text.trim() === "") {
+            return res.status(400).json({ message: "Comment text is required" });
+        }
+
+        // Create comment
+        const newComment = {
+            authorId: userId,
+            text: text.trim(),
+        };
+
+        // Add comment to task
+        task.comments.push(newComment);
+
+        // Save changes
+        await task.save();
+
+        // Return the newly added comment (last in array)
+        const addedComment = task.comments[task.comments.length - 1];
+
+        return res.status(201).json({
+            message: "Comment added successfully",
+            comment: addedComment,
+        });
+
+    } catch (error) {
+        return res
+            .status(500)
+            .json({ message: "Error writing a comment", error: error.message });
+    }
+}
