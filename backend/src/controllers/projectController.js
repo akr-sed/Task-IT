@@ -486,6 +486,40 @@ export async function getInvitation(req, res) {
     }
 }
 
+// Add this function to userController.js
+export async function fetchInvitations(req, res) {
+    try {
+        const userId = req.user.id;
+        const userEmail = req.user.email;
+
+        // Find invitations by user ID or email
+        const invitations = await Invite.find({
+            $or: [{ invitedUserId: userId }, { invitedEmail: userEmail }],
+        });
+        const projectNames = {};
+        for (const invite of invitations) {
+            const project = await Project.findById(invite.projectId);
+            projectNames[project?._id] = project?.name;
+        }
+        const invitorNames = {};
+        const invitorEmails = {};
+        for (const invite of invitations) {
+            const invitor = await User.findById(invite.invitedBy);
+            invitorNames[invite._id] = invitor ? invitor.name : "A Taskit user";
+            invitorEmails[invite._id] = invitor ? invitor.email : "No email";
+        }
+        return res.status(200).json({
+            invitations,
+            projectNames,
+            invitorNames,
+            invitorEmails,
+        });
+    } catch (error) {
+        console.error("Error fetching user invitations:", error);
+        return res.status(500).json({ message: "Internal server error" });
+    }
+}
+
 // Transfer ownership
 export async function transferOwner(req, res) {
     // todo: transfer ownership ( password check first )
