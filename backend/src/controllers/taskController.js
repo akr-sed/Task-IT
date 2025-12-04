@@ -248,3 +248,16 @@ export async function listTasksOfProject(req, res) {
       .json({ message: "Error fetching tasks", error: error.message });
   }
 }
+
+export async function listTasks(req, res) {
+  try {
+    const userId = req.userId;
+    // fetch all the tasks that are assigned to the user
+    const tasks = await Task.find({ assignedTo: userId });
+    return res.status(200).json({ tasks: tasks });
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Error fetching tasks", error: error.message });
+  }
+}
