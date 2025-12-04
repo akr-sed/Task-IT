@@ -25,12 +25,6 @@ export const useDashboardData = () => {
     setInvitesLoading(true);
 
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
-
       // ✅ PARALLEL FETCH - All independent requests at once
       const [projectsResponse, invitesResponse] = await Promise.allSettled([
         projectService.getAllProjects(),
