@@ -1,5 +1,14 @@
 import React from "react";
-import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { Calendar, Users, User } from "lucide-react";
+
+// Import layout
+import MainLayout from "./components/layout/MainLayout";
 
 // Import authentication components
 import SignupForm from "./components/authentication/SignupForm";
@@ -7,6 +16,25 @@ import VerificationForm from "./components/authentication/VerificationForm";
 import LoginForm from "./components/authentication/LoginForm";
 import RequestPasswordResetForm from "./components/authentication/RequestPasswordResetForm";
 import PasswordResetFlow from "./components/authentication/PasswordResetFlow";
+
+// Import pages
+import Dashboard from "./pages/Dashboard";
+import Projects from "./pages/Projects";
+import TasksPage from "./pages/TasksPage";
+import Settings from "./pages/Settings";
+
+// Import project components
+import CreateProject from "./components/projects/CreateProject";
+import EditProject from "./components/projects/EditProject";
+import ProjectDetails from "./components/projects/ProjectDetails";
+import AcceptInvite from "./components/projects/AcceptInvite";
+
+// Import task components
+import TaskList from "./components/tasks/TaskList";
+import TaskDetail from "./components/tasks/TaskDetail";
+import TaskBoard from "./components/tasks/TaskAssignment";
+
+// Axios logging is now handled by axiosInstance interceptors
 
 // Auth check
 const isAuthenticated = () => {
@@ -37,10 +65,10 @@ function App() {
         {/* ============================================ */}
         {/* PUBLIC ROUTES (Outside MainLayout)          */}
         {/* ============================================ */}
-        
+
         {/* Root redirect */}
         <Route path="/" element={<Navigate to="/login" replace />} />
-        
+
         {/* Authentication routes */}
         <Route
           path="/signup"
@@ -66,7 +94,7 @@ function App() {
             </PublicRoute>
           }
         />
-        
+
         {/* Password Reset Flow */}
         <Route
           path="/reset-password"
@@ -84,6 +112,89 @@ function App() {
             </PublicRoute>
           }
         />
+
+        {/* Special invitation route (handles auth internally, full-page design) */}
+        <Route
+          path="/projects/:projectId/invite/:inviteId/:code"
+          element={<AcceptInvite />}
+        />
+
+        {/* ============================================ */}
+        {/* PROTECTED ROUTES (Inside MainLayout)        */}
+        {/* ============================================ */}
+
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <MainLayout />
+            </ProtectedRoute>
+          }
+        >
+          {/* Dashboard */}
+          <Route path="dashboard" element={<Dashboard />} />
+
+          {/* Projects Routes */}
+          <Route path="projects" element={<Projects />} />
+          <Route path="projects/new" element={<CreateProject />} />
+          <Route path="projects/:projectId" element={<ProjectDetails />} />
+          <Route path="projects/:projectId/edit" element={<EditProject />} />
+
+          {/* Task Routes */}
+          <Route path="projects/:projectId/tasks" element={<TaskList />} />
+          <Route
+            path="projects/:projectId/tasks/:taskId"
+            element={<TaskDetail />}
+          />
+          <Route path="projects/:projectId/board" element={<TaskBoard />} />
+
+          {/* Future routes - ready for expansion */}
+          <Route
+            path="tasks"
+            element={<TasksPage />}
+          />
+          <Route
+            path="calendar"
+            element={
+              <div className="max-w-4xl mx-auto text-center py-20">
+                <div className="w-20 h-20 bg-gradient-to-br from-red-400 to-red-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Calendar className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Calendar
+                </h1>
+                <p className="text-gray-600">Coming Soon! 📅</p>
+              </div>
+            }
+          />
+          <Route
+            path="team"
+            element={
+              <div className="max-w-4xl mx-auto text-center py-20">
+                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Users className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Team</h1>
+                <p className="text-gray-600">Coming Soon! 👥</p>
+              </div>
+            }
+          />
+          <Route path="settings" element={<Settings />} />
+          <Route
+            path="profile"
+            element={
+              <div className="max-w-4xl mx-auto text-center py-20">
+                <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <User className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">
+                  Profile
+                </h1>
+                <p className="text-gray-600">Coming Soon! 👤</p>
+              </div>
+            }
+          />
+        </Route>
 
         {/* ============================================ */}
         {/* 404 - Catch All Route                       */}
