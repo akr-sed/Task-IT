@@ -137,3 +137,47 @@ export async function deleteTask(req, res) {
     return res.status(500).json({ message: "Internal server error." });
   }
 }
+
+export async function assignTask(req, res) {
+  if (req.permissionLevel < 2) {
+    return res
+      .status(403)
+      .json({ message: "Insufficient permissions to assign a task." });
+  }
+
+  try {
+    const { assignedTo } = req.body;
+
+    if (!assignedTo) {
+      return res
+        .status(400)
+        .json({ message: "Assigned member ID is required." });
+    }
+
+    const task = req.task;
+    // no need for additional check since the middleware already did it
+
+    // Verify assigned user belongs to the project
+    const belongs = await checkIfUserBelongsToProject({
+      project: req.project,
+      userId: assignedTo,
+    });
+
+    if (!belongs) {
+      return res.status(403).json({
+        message: "Assigned user does not belong to this project.",
+      });
+    }
+
+    // Assign new member
+    task.assignedTo = assignedTo;
+    await task.save();
+
+    return res
+      .status(200)
+      .json({ message: "Task assignment updated successfully." });
+  } catch (error) {
+    console.error("Error in assignTask controller:", error);
+    return res.status(500).json({ message: "Internal server error." });
+  }
+}
