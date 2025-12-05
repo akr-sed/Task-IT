@@ -1,3 +1,8 @@
+/** PLEASE REVIEW TASK ROUTES BEFORE IMPLEMENTING THIS FILE */
+
+/* ──────────────────────────────────────────────
+   Controller Functions
+────────────────────────────────────────────── */
 import Task from "../models/task.js";
 import checkIfUserBelongsToProject from "../utils/projectBelongCheck.js";
 
@@ -249,6 +254,7 @@ export async function listTasksOfProject(req, res) {
   }
 }
 
+// list user tasks
 export async function listTasks(req, res) {
   try {
     const userId = req.userId;
@@ -262,6 +268,7 @@ export async function listTasks(req, res) {
   }
 }
 
+// comment
 export async function comment(req, res) {
     // Check membership first
     if (req.permissionLevel === 0)
@@ -305,6 +312,7 @@ export async function comment(req, res) {
             .json({ message: "Error writing a comment", error: error.message });
     }
 }
+
 
 // delete comment
 export async function deleteComment(req, res) {
