@@ -31,7 +31,7 @@ axiosInstance.interceptors.request.use(
     }
 
     // Get device info for authentication endpoints
-    if (config.url?.includes('/auth/login') || config.url?.includes('/auth/signup')) {
+    if (config.url?.includes('/auth/login')  || config.url?.includes('/auth/signup') || config.url?.includes('/auth/reset-password/new' )|| config.url?.includes("/auth/verify-email")) {
       const deviceId = localStorage.getItem('deviceId') || (() => {
         const id = crypto.randomUUID();
         localStorage.setItem('deviceId', id);

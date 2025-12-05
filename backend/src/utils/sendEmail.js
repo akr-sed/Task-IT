@@ -243,4 +243,3 @@ export const sendEmailChangeVerification = async (email, changeCode, name) => {
 export const sendProjectInvitation = async (email, inviteCode, name, projectName, inviterName, inviteLink) => {
   return sendEmail(email, inviteCode, name, 'invite', { projectName, inviterName, inviteLink });
 };
-

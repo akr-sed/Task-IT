@@ -1,18 +1,18 @@
 import express from "express";
 import {
-    createProject,
-    editProject,
-    deleteProject,
-    updateRole,
-    transferOwner,
-    invite,
-    deleteUser,
-    getProject,
-    fetchProjects,
-    acceptInvite,
-    getInvitation,
-    fetchInvitations,
-    declineInvite,
+  createProject,
+  editProject,
+  deleteProject,
+  updateRole,
+  transferOwner,
+  invite,
+  deleteUser,
+  getProject,
+  fetchProjects,
+  acceptInvite,
+  getInvitation,
+  fetchInvitations,
+  declineInvite,
 } from "../controllers/projectController.js";
 
 // middlewares
@@ -37,39 +37,39 @@ projectRouter.get("/", authService, fetchProjects);
 
 //  Edit a project's name or description
 projectRouter.put(
-    "/:projectId",
-    bodyCheck,
-    authService,
-    checkPermission,
-    editProject
+  "/:projectId",
+  bodyCheck,
+  authService,
+  checkPermission,
+  editProject
 );
 
 
 //  Delete a project
 projectRouter.delete(
-    "/:projectId",
-    bodyCheck,
-    authService,
-    checkPermission,
-    passCheck,
-    deleteProject
+  "/:projectId",
+  bodyCheck,
+  authService,
+  checkPermission,
+  passCheck,
+  deleteProject
 );
 
 //  Update a member's role in the project
 projectRouter.put(
-    "/:projectId/members/:memberId/role",
-    authService,
-    checkPermission,
-    updateRole
+  "/:projectId/members/:memberId/role",
+  authService,
+  checkPermission,
+  updateRole
 );
 
 //  Transfer project ownership
 projectRouter.put(
-    "/:projectId/transfer-owner",
-    authService,
-    checkPermission,
-    passCheck,
-    transferOwner
+  "/:projectId/transfer-owner",
+  authService,
+  checkPermission,
+  passCheck,
+  transferOwner
 );
 
 //  Invite a user or email to join project
@@ -77,9 +77,9 @@ projectRouter.post("/:projectId/invite", authService, checkPermission, invite);
 
 // route to accept invite
 projectRouter.post(
-    "/:projectId/invite/:inviteId/:inviteCode",
-    authService,
-    acceptInvite
+  "/:projectId/invite/:inviteId/:inviteCode",
+  authService,
+  acceptInvite
 );
 
 // route to get invite details
@@ -89,17 +89,17 @@ projectRouter.get("/:projectId/invite/:inviteId", authService, getInvitation);
 
 // route to handle declining joining a project
 projectRouter.post(
-    "/:projectId/invite/:inviteId/:inviteCode/decline",
-    authService,
-    declineInvite
+  "/:projectId/invite/:inviteId/:inviteCode/decline",
+  authService,
+  declineInvite
 );
 
 // Delete a user from a project
 projectRouter.delete(
-    "/:projectId/:userId/delete",
-    authService,
-    checkPermission,
-    deleteUser
+  "/:projectId/:userId/delete",
+  authService,
+  checkPermission,
+  deleteUser
 );
 
 
