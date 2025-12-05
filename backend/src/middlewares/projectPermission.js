@@ -1,9 +1,10 @@
+// password.js
 import Project from "../models/project.js";
 
 export default async function checkPermission(req, res, next) {
     try {
 
-
+        
         // OWNER = 3
         // ADMIN = 2
         // MEMBER = 1
@@ -45,7 +46,7 @@ export default async function checkPermission(req, res, next) {
         if (permissionLevel === 0) {
             return res.status(403).json({ error: "Access denied — not part of this project." });
         }
-
+        
         // remember here we attach all what we need in the request.
         req.project = project;
         // remember the project to not fetch for it each time we will pass it directly since all the routes of the project will use it.
