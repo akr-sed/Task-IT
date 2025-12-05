@@ -107,7 +107,65 @@ const authService = {
     const response = await api.post('/auth/logout');
     return response;
   },
+
+  /**
+   * Update user profile (name)
+   * @param {Object} profileData - { name }
+   * @returns {Promise} Response with updated user data
+   */
+  updateProfile: async (profileData) => {
+    const response = await api.put('/auth/profile', profileData);
+    return response.data;
+  },
+
+  /**
+   * Change password
+   * @param {Object} passwordData - { currentPassword, newPassword }
+   * @returns {Promise} Response with success message
+   */
+  changePassword: async (passwordData) => {
+    const response = await api.post('/auth/change-password', passwordData);
+    return response.data;
+  },
+
+  /**
+   * Request email change (sends verification code to new email)
+   * @param {string} newEmail - New email address
+   * @returns {Promise} Response with success message
+   */
+  requestEmailChange: async (newEmail) => {
+    const response = await api.post('/auth/email/request-change', { newEmail });
+    return response.data;
+  },
+
+  /**
+   * Verify email change with code
+   * @param {Object} verificationData - { verificationCode, newEmail }
+   * @returns {Promise} Response with updated user data
+   */
+  verifyEmailChange: async (verificationData) => {
+    const response = await api.post('/auth/email/verify-change', verificationData);
+    return response.data;
+  },
+
+  /**
+   * Request account deletion (sends verification code)
+   * @returns {Promise} Response with success message
+   */
+  requestAccountDeletion: async () => {
+    const response = await api.post('/auth/account/request-deletion');
+    return response.data;
+  },
+
+  /**
+   * Verify and delete account permanently
+   * @param {number} verificationCode - 6-digit verification code
+   * @returns {Promise} Response with success message
+   */
+  verifyAndDeleteAccount: async (verificationCode) => {
+    const response = await api.post('/auth/account/verify-deletion', { verificationCode });
+    return response.data;
+  },
 };
 
-export default authService
-
+export default authService;

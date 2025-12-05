@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from '../../api';
 import taskit from "../../assets/icons/task-it.svg";
+import { Mail, Lock, Key, CheckCircle, XCircle, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const RequestPasswordResetForm = () => {
   const [email, setEmail] = useState("");
@@ -41,27 +42,10 @@ const RequestPasswordResetForm = () => {
 
       {/* Floating Icons */}
       <div className="absolute top-20 left-20 opacity-10">
-        <svg
-          className="w-16 h-16 text-[#E31B54] animate-float"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
-          <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
-        </svg>
+        <Mail className="w-16 h-16 text-[#E31B54] animate-float" fill="currentColor" />
       </div>
       <div className="absolute bottom-20 right-20 opacity-10">
-        <svg
-          className="w-20 h-20 text-[#E91E63] animate-float-delayed"
-          fill="currentColor"
-          viewBox="0 0 20 20"
-        >
-          <path
-            fillRule="evenodd"
-            d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
-            clipRule="evenodd"
-          />
-        </svg>
+        <Lock className="w-20 h-20 text-[#E91E63] animate-float-delayed" fill="currentColor" />
       </div>
 
       {/* Main Card */}
@@ -76,19 +60,7 @@ const RequestPasswordResetForm = () => {
             <div className="flex justify-center mb-6">
               <div className="relative">
                 <div className="w-20 h-20 bg-gradient-to-br from-[#E31B54] to-[#E91E63] rounded-full flex items-center justify-center transform hover:rotate-12 transition-transform duration-300">
-                  <svg
-                    className="w-10 h-10 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"
-                    />
-                  </svg>
+                  <Key className="w-10 h-10 text-white" />
                 </div>
                 {/* Animated ring */}
                 <div className="absolute inset-0 w-20 h-20 border-2 border-[#E31B54] rounded-full animate-ping opacity-20"></div>
@@ -113,17 +85,7 @@ const RequestPasswordResetForm = () => {
             <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500 rounded-lg animate-slideDown">
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0">
-                  <svg
-                    className="w-6 h-6 text-green-500"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
+                  <CheckCircle className="w-6 h-6 text-green-500" fill="currentColor" />
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium text-green-700">
@@ -141,17 +103,7 @@ const RequestPasswordResetForm = () => {
           {error && (
             <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
               <div className="flex items-start gap-3">
-                <svg
-                  className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0"
-                  viewBox="0 0 20 20"
-                  fill="currentColor"
-                >
-                  <path
-                    fillRule="evenodd"
-                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                    clipRule="evenodd"
-                  />
-                </svg>
+                <XCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" fill="currentColor" />
                 <p className="text-sm text-red-700">{error}</p>
               </div>
             </div>
@@ -169,19 +121,7 @@ const RequestPasswordResetForm = () => {
               </label>
               <div className="relative group">
                 <span className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 group-focus-within:text-[#E31B54] transition-colors">
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                    />
-                  </svg>
+                  <Mail className="w-5 h-5" />
                 </span>
                 <input
                   type="email"
@@ -211,43 +151,13 @@ const RequestPasswordResetForm = () => {
 
               {loading ? (
                 <span className="flex items-center justify-center">
-                  <svg
-                    className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    ></circle>
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                    ></path>
-                  </svg>
+                  <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
                   Sending code...
                 </span>
               ) : (
                 <span className="flex items-center justify-center gap-2">
                   Send Reset Code
-                  <svg
-                    className="w-5 h-5 group-hover:translate-x-1 transition-transform"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M14 5l7 7m0 0l-7 7m7-7H3"
-                    />
-                  </svg>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </span>
               )}
             </button>
@@ -269,19 +179,7 @@ const RequestPasswordResetForm = () => {
               onClick={() => navigate("/login")}
               className="group flex items-center justify-center gap-2 w-full text-gray-600 hover:text-[#E31B54] font-medium transition-colors"
             >
-              <svg
-                className="w-4 h-4 group-hover:-translate-x-1 transition-transform"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
+              <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
               Remember your password? Log in
             </button>
 
