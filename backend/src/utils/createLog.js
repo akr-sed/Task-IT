@@ -17,6 +17,7 @@ async function createLog({
   userAssigned,
   projectId,
   taskId,
+  priority = "medium",
 } = {}) {
   if (!title || !content) {
     console.warn("createLog called without mandatory title/content");
@@ -30,6 +31,7 @@ async function createLog({
     userAssigned,
     projectId,
     taskId,
+    priority,
   });
 
   try {
@@ -41,4 +43,3 @@ async function createLog({
 }
 
 export default createLog;
-

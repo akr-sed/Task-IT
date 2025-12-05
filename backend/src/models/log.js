@@ -8,6 +8,7 @@ const logSchema = new mongoose.Schema(
         userCreated: { type: mongoose.Schema.Types.ObjectId, ref: "users", required: false }, // ex: user who created something
         projectId: { type: mongoose.Schema.Types.ObjectId, ref: "projects", required: false }, // ex: project related to the log
         taskId: { type: mongoose.Schema.Types.ObjectId, ref: "tasks", required: false }, // ex: task related to the log
+        priority: { type: String, enum: ["low", "medium", "high"], default: "medium" },
     },
     {
         timestamps: { createdAt: true, updatedAt: false },
