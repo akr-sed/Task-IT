@@ -2,6 +2,7 @@ import Project from "../models/project.js";
 import User from "../models/user.js";
 import Invite from "../models/invite.js";
 import { sendProjectInvitation } from "../utils/sendEmail.js";
+import createLog from "../utils/createLog.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -13,7 +14,6 @@ dotenv.config();
 
 // Create new project
 export async function createProject(req, res) {
-  // todo: create a project POST method ( all params are inside body )
   try {
     const { name, displayName, description } = req.body;
     if (!name) {
@@ -36,6 +36,16 @@ export async function createProject(req, res) {
     });
 
     await newProject.save();
+
+    // LOG USER ACTION
+    await createLog({
+      title: "Project Created",
+      content: `Project '${name}' created by user ID ${req.userId}`,
+      userCreated: req.userId,
+      projectId: newProject._id,
+      priority: "low",
+    });
+
     res
       .status(201)
       .json({ message: "Project created successfully", project: newProject });
@@ -47,7 +57,6 @@ export async function createProject(req, res) {
 
 // Edit project details
 export async function editProject(req, res) {
-  // todo: edit project info ( display name , description )
   // only admin can edit
   if (req.permissionLevel < 2)
     return res
@@ -72,6 +81,15 @@ export async function editProject(req, res) {
   if (description) project.description = description;
 
   await project.save();
+
+  await createLog({
+    title: "Project Edited",
+    content: `Project '${project.name}' edited by user ID ${req.userId}`,
+    userCreated: req.userId,
+    projectId: project._id,
+    priority: "low",
+  });
+
   res.status(200).json({ message: "Project updated successfully", project });
 }
 
@@ -90,10 +108,14 @@ export async function fetchProjects(req, res) {
   try {
     const userId = req.userId;
     const projects = await Project.find({
-      $or: [
-        { ownedBy: userId }, // if your field is called ownedBy (based on your earlier code)
-        { "members.id": userId },
-      ],
+      $or: [{ ownedBy: userId }, { "members.id": userId }],
+    });
+
+    await createLog({
+      title: "Projects Retrieved",
+      content: `User ID ${userId} fetched their project list`,
+      userCreated: userId,
+      priority: "low",
     });
 
     res.status(200).json({ projects });
@@ -105,7 +127,6 @@ export async function fetchProjects(req, res) {
 
 // Delete project
 export async function deleteProject(req, res) {
-  // todo: delete the project ( must verify password through a middleware )
   if (req.permissionLevel !== 3)
     return res
       .status(403)
@@ -114,6 +135,15 @@ export async function deleteProject(req, res) {
     const project = req.project; // Retrieved from permission middleware
     await Project.findByIdAndDelete(project._id);
     await Invite.deleteMany({ projectId: project._id });
+
+    await createLog({
+      title: "Project Deleted",
+      content: `Project '${project.name}' deleted by user ID ${req.userId}`,
+      userCreated: req.userId,
+      projectId: project._id,
+      priority: "high",
+    });
+
     res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
     console.error("Error deleting project:", error);
@@ -146,6 +176,15 @@ export async function updateRole(req, res) {
 
     member.role = role;
     await project.save();
+
+    await createLog({
+      title: "Member Role Updated",
+      content: `Member ID ${memberId} role updated to '${role}' by user ID ${req.userId} in project '${project.name}'`,
+      userCreated: req.userId,
+      userAssigned: memberId,
+      projectId: project._id,
+      priority: "medium",
+    });
 
     res
       .status(200)
@@ -213,6 +252,16 @@ export async function deleteUser(req, res) {
       });
     }
 
+    // LOG USER ACTION
+    await createLog({
+      title: "Member Removed from Project",
+      content: `Member ID ${userId} removed by user ID ${req.userId} from project '${project.name}'`,
+      userCreated: req.userId,
+      userAssigned: userId,
+      projectId: project._id,
+      priority: "high",
+    });
+
     // Return success response
     res.status(200).json({
       message: "Member removed successfully",
@@ -226,7 +275,6 @@ export async function deleteUser(req, res) {
 
 // Transfer ownership
 export async function transferOwner(req, res) {
-  // todo: transfer ownership ( password check first )
   if (req.permissionLevel !== 3)
     return res
       .status(403)
@@ -266,6 +314,26 @@ export async function transferOwner(req, res) {
     project.members.push({
       id: previousOwnerId,
       role: "admin",
+    });
+
+    // LOG USER ACTION
+    await createLog({
+      title: "Project Ownership Transferred",
+      content: `Project '${project.name}' ownership transferred to user ID ${newOwnerId} by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: newOwnerId,
+      projectId: project._id,
+      priority: "high",
+    });
+
+    // LOG Role Change
+    await createLog({
+      title: "Member Role Updated",
+      content: `Previous owner ID ${previousOwnerId} role updated to 'admin' in project '${project.name}'`,
+      userCreated: req.userId,
+      userAssigned: previousOwnerId,
+      projectId: project._id,
+      priority: "low",
     });
 
     await project.save();
@@ -351,11 +419,20 @@ export async function invite(
     await sendProjectInvitation(
       invitedEmail,
       inviteCode,
-      invitedUser?.name || "there", // Use user's name or generic greeting
+      invitedUser?.name || "there",
       project.name,
       "taskit Team",
       inviteLink
     );
+
+    await createLog({
+      title: "Project Invitation Sent",
+      content: `User ID ${req.userId} invited ${invitedEmail} to project '${project.name}'`,
+      userCreated: req.userId,
+      userAssigned: invitedUser ? invitedUser._id : undefined,
+      projectId: project._id,
+      priority: "medium",
+    });
 
     return res.status(200).json({
       message: "Invitation sent successfully",
@@ -425,8 +502,16 @@ export async function acceptInvite(req, res) {
       role: "member", // Default role for invited users
     });
     await project.save();
-    // Delete the invitation after it's used
     await Invite.findByIdAndDelete(inviteId);
+
+    await createLog({
+      title: "Project Invitation Accepted",
+      content: `User ID ${userId} joined project '${project.name}' via invitation`,
+      userCreated: userId,
+      userAssigned: userId,
+      projectId: project._id,
+      priority: "medium",
+    });
 
     res
       .status(200)
@@ -487,6 +572,15 @@ export async function declineInvite(req, res) {
 
     // Delete the invitation
     await Invite.findByIdAndDelete(inviteId);
+
+    await createLog({
+      title: "Project Invitation Declined",
+      content: `User ID ${currentUserId} declined invitation ${inviteId} for project '${project.name}'`,
+      userCreated: currentUserId,
+      userAssigned: invite.invitedBy.toString(),
+      projectId: project._id,
+      priority: "low",
+    });
 
     // Return success response
     return res.status(200).json({
@@ -566,6 +660,7 @@ export async function fetchInvitations(req, res) {
       invitorNames[invite._id] = invitor ? invitor.name : "A Taskit user";
       invitorEmails[invite._id] = invitor ? invitor.email : "No email";
     }
+
     return res.status(200).json({
       invitations,
       projectNames,
@@ -584,6 +679,8 @@ export async function fetchInvitations(req, res) {
 export default {
   createProject,
   editProject,
+  getProject,
+  fetchProjects,
   deleteProject,
   updateRole,
   transferOwner,
