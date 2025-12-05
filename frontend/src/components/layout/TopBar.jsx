@@ -9,6 +9,27 @@ import {
   MenuItem,
   Transition,
 } from "@headlessui/react";
+import { 
+  Search, 
+  X, 
+  Menu as MenuIcon, 
+  Loader2, 
+  Users, 
+  FolderKanban, 
+  ListTodo, 
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  User as UserIcon,
+  Home,
+  Settings,
+  LogOut,
+  Bell,
+  BellOff,
+  Frown,
+  CheckCircle2,
+  Archive
+} from "lucide-react";
 
 const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpen }) => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -107,9 +128,14 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
           task.activity?.toLowerCase().includes(query.toLowerCase())
       ).slice(0, 5);
 
-      // Search for users (team members)
+      // Search for users (team members, owners, and creators)
       const uniqueUserIds = new Set();
       allProjects.forEach((project) => {
+        // Add project owner and creator
+        if (project.ownedBy) uniqueUserIds.add(project.ownedBy);
+        if (project.createdBy) uniqueUserIds.add(project.createdBy);
+        
+        // Add all project members
         if (project.members) {
           project.members.forEach((member) => {
             if (member.id) uniqueUserIds.add(member.id);
@@ -178,28 +204,11 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
           className="lg:hidden w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 flex items-center justify-center transition-all hover:scale-105 active:scale-95 flex-shrink-0"
           aria-label="Toggle sidebar"
         >
-          <svg
-            className="w-5 h-5 text-gray-700"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
-          >
-            {sidebarOpen ? (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            ) : (
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 6h16M4 12h16M4 18h16"
-              />
-            )}
-          </svg>
+          {sidebarOpen ? (
+            <X className="w-5 h-5 text-gray-700" />
+          ) : (
+            <MenuIcon className="w-5 h-5 text-gray-700" />
+          )}
         </button>
 
         {/* Left Section - Search */}
@@ -208,39 +217,9 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
           <div className="flex-1 relative group" ref={searchRef}>
             <div className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 pointer-events-none z-10">
               {searching ? (
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-[#E31B54] animate-spin"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  ></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
+                <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 text-[#E31B54] animate-spin" />
               ) : (
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-focus-within:text-[#E31B54] transition-colors"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                  />
-                </svg>
+                <Search className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400 group-focus-within:text-[#E31B54] transition-colors" />
               )}
             </div>
             <input
@@ -256,19 +235,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                 onClick={() => setSearchQuery("")}
                 className="absolute right-3 sm:right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <svg
-                  className="w-4 h-4 sm:w-5 sm:h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
             )}
             {!searchQuery && (
@@ -294,19 +261,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                     searchResults.users.length === 0 ? (
                       <div className="p-8 text-center">
                         <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                          <svg
-                            className="w-8 h-8 text-gray-400"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                            />
-                          </svg>
+                          <Frown className="w-8 h-8 text-gray-400" />
                         </div>
                         <p className="text-sm font-semibold text-gray-900 mb-1">
                           No results found
@@ -321,9 +276,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         {searchResults.projects.length > 0 && (
                           <div className="mb-2">
                             <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
-                              </svg>
+                              <FolderKanban className="w-4 h-4" />
                               Projects ({searchResults.projects.length})
                             </div>
                             {searchResults.projects.map((project) => (
@@ -352,9 +305,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                                     {project.members?.length + 1 || 1} members
                                   </p>
                                 </div>
-                                <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <ChevronRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                               </button>
                             ))}
                           </div>
@@ -364,9 +315,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         {searchResults.tasks.length > 0 && (
                           <div className="mb-2">
                             <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                              </svg>
+                              <ListTodo className="w-4 h-4" />
                               Tasks ({searchResults.tasks.length})
                             </div>
                             {searchResults.tasks.map((task) => (
@@ -380,9 +329,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                                 className="w-full px-4 py-3 hover:bg-gray-50 transition-colors flex items-start gap-3 group"
                               >
                                 <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center flex-shrink-0 group-hover:bg-[#E31B54] group-hover:text-white transition-all">
-                                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                  </svg>
+                                  <CheckCircle2 className="w-5 h-5" />
                                 </div>
                                 <div className="flex-1 text-left min-w-0">
                                   <p className="text-sm font-semibold text-gray-900 group-hover:text-[#E31B54] transition-colors line-clamp-1">
@@ -400,14 +347,16 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                                     <span className="text-xs text-gray-400 bg-gray-100 px-2 py-0.5 rounded-md">
                                       {task.status}
                                     </span>
-                                    <span className="text-xs font-medium">
-                                      {task.priority === "high" ? "🔴" : task.priority === "medium" ? "🟡" : "🔵"}
+                                    <span className={`text-xs font-medium px-2 py-0.5 rounded-md ${
+                                      task.priority === "high" ? "bg-red-100 text-red-700" :
+                                      task.priority === "medium" ? "bg-yellow-100 text-yellow-700" :
+                                      "bg-blue-100 text-blue-700"
+                                    }`}>
+                                      {task.priority}
                                     </span>
                                   </div>
                                 </div>
-                                <svg className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                                <ChevronRight className="w-5 h-5 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0" />
                               </button>
                             ))}
                           </div>
@@ -417,9 +366,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         {searchResults.users.length > 0 && (
                           <div>
                             <div className="px-4 py-2 text-xs font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                              </svg>
+                              <Users className="w-4 h-4" />
                               Team Members ({searchResults.users.length})
                             </div>
                             {searchResults.users.map((u) => (
@@ -460,38 +407,14 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
               className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
               title="Go back"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <ChevronLeft className="w-5 h-5" />
             </button>
             <button
               onClick={() => window.history.forward()}
               className="w-10 h-10 rounded-xl bg-gray-50 hover:bg-gray-100 text-gray-600 flex items-center justify-center transition-all hover:scale-105 active:scale-95"
               title="Go forward"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
+              <ChevronRight className="w-5 h-5" />
             </button>
           </div>
 
@@ -503,19 +426,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
             className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 hover:bg-gray-100 hidden sm:flex items-center justify-center transition-all hover:scale-105 active:scale-95 group"
             title="Notifications"
           >
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 group-hover:text-[#E31B54] transition-colors"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-              />
-            </svg>
+            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 group-hover:text-[#E31B54] transition-colors" />
             <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-[#E31B54] to-[#E91E63] text-white text-[9px] sm:text-xs font-bold rounded-full flex items-center justify-center animate-pulse shadow-lg">
               7
             </span>
@@ -550,25 +461,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                   }`}
                 >
                   {loggingOut ? (
-                    <svg
-                      className="w-4 h-4 sm:w-5 sm:h-5 animate-spin"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="currentColor"
-                        strokeWidth="4"
-                      ></circle>
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                      ></path>
-                    </svg>
+                    <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                   ) : (
                     getInitials(user.name)
                   )}
@@ -579,19 +472,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
               </div>
 
               {/* Dropdown Icon - Hidden on mobile */}
-              <svg
-                className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-600 transition-colors hidden sm:block"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 9l-7 7-7-7"
-                />
-              </svg>
+              <ChevronDown className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 group-hover:text-gray-600 transition-colors hidden sm:block" />
             </MenuButton>
 
             <Transition
@@ -633,19 +514,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         } w-full px-3 py-2.5 text-left flex items-center gap-3 transition-colors group rounded-xl`}
                       >
                         <div className="w-9 h-9 rounded-lg bg-blue-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg
-                            className="w-4 h-4 text-blue-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                            />
-                          </svg>
+                          <UserIcon className="w-4 h-4 text-blue-600" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-900">
@@ -668,19 +537,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         } w-full px-3 py-2.5 text-left flex items-center gap-3 transition-colors group rounded-xl`}
                       >
                         <div className="w-9 h-9 rounded-lg bg-purple-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg
-                            className="w-4 h-4 text-purple-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-                            />
-                          </svg>
+                          <Home className="w-4 h-4 text-purple-600" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-900">
@@ -701,19 +558,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         } w-full px-3 py-2.5 text-left flex items-center gap-3 transition-colors group rounded-xl`}
                       >
                         <div className="w-9 h-9 rounded-lg bg-green-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg
-                            className="w-4 h-4 text-green-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"
-                            />
-                          </svg>
+                          <Archive className="w-4 h-4 text-green-600" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-900">
@@ -734,25 +579,7 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                         } w-full px-3 py-2.5 text-left flex items-center gap-3 transition-colors group rounded-xl`}
                       >
                         <div className="w-9 h-9 rounded-lg bg-gray-100 flex items-center justify-center group-hover:scale-110 transition-transform">
-                          <svg
-                            className="w-4 h-4 text-gray-600"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                            />
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                            />
-                          </svg>
+                          <Settings className="w-4 h-4 text-gray-600" />
                         </div>
                         <div className="flex-1">
                           <p className="text-sm font-semibold text-gray-900">
@@ -781,39 +608,9 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
                       >
                         <div className="w-9 h-9 rounded-lg bg-red-100 flex items-center justify-center group-hover:scale-110 transition-transform">
                           {loggingOut ? (
-                            <svg
-                              className="w-4 h-4 text-red-600 animate-spin"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                            >
-                              <circle
-                                className="opacity-25"
-                                cx="12"
-                                cy="12"
-                                r="10"
-                                stroke="currentColor"
-                                strokeWidth="4"
-                              ></circle>
-                              <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                              ></path>
-                            </svg>
+                            <Loader2 className="w-4 h-4 text-red-600 animate-spin" />
                           ) : (
-                            <svg
-                              className="w-4 h-4 text-red-600"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"
-                              />
-                            </svg>
+                            <LogOut className="w-4 h-4 text-red-600" />
                           )}
                         </div>
                         <div className="flex-1">
