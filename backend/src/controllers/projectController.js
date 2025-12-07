@@ -672,18 +672,3 @@ export async function fetchInvitations(req, res) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
-
-/* ──────────────────────────────────────────────
-   Export as grouped object
-────────────────────────────────────────────── */
-export default {
-  createProject,
-  editProject,
-  getProject,
-  fetchProjects,
-  deleteProject,
-  updateRole,
-  transferOwner,
-  invite,
-  deleteUser,
-};
