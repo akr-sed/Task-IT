@@ -5,6 +5,7 @@ import authRouter from "./routes/authRoutes.js";
 import generalCheck from "./middlewares/generalCheck.js";
 import projectRouter from "./routes/projectRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
+import logRouter from "./routes/logRoutes.js";
 const extractMongoUsername = (uri) => {
   try {
     const regex = /mongodb(?:\+srv)?:\/\/([^:]+):/;
@@ -29,6 +30,7 @@ app.use(express.json());
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter);
+app.use("/api/logs", logRouter);
 
 connectDB().then(() => {
   const mongoUsername = extractMongoUsername(process.env.MONGODB_URI);
