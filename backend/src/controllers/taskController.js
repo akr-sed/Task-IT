@@ -5,6 +5,7 @@
 ────────────────────────────────────────────── */
 import Task from "../models/task.js";
 import checkIfUserBelongsToProject from "../utils/projectBelongCheck.js";
+import createLog from "../utils/createLog.js";
 
 // Create new task
 export async function createTask(req, res) {
@@ -59,6 +60,17 @@ export async function createTask(req, res) {
     });
 
     const savedTask = await newTask.save();
+
+    await createLog({
+      title: "Task Created",
+      content: `Task '${title}' created in project ID ${projectId} by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: assignedTo,
+      projectId,
+      taskId: savedTask._id,
+      priority: "medium",
+    });
+
     return res
       .status(201)
       .json({ message: "task created successfully", task: savedTask });
@@ -95,6 +107,16 @@ export async function editTask(req, res) {
     });
 
     const updatedTask = await task.save();
+
+    await createLog({
+      title: "Task Edited",
+      content: `Task '${updatedTask.title}' (ID ${updatedTask._id}) edited by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: updatedTask.assignedTo,
+      projectId: updatedTask.projectId,
+      taskId: updatedTask._id,
+      priority: "low",
+    });
 
     return res
       .status(200)
@@ -135,6 +157,16 @@ export async function deleteTask(req, res) {
     // no need for additional check since the middleware already did it
 
     await Task.findByIdAndDelete(task._id);
+
+    await createLog({
+      title: "Task Deleted",
+      content: `Task '${task.title}' (ID ${task._id}) deleted by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: task.assignedTo,
+      projectId: task.projectId,
+      taskId: task._id,
+      priority: "high",
+    });
 
     return res.status(200).json({ message: "Task deleted successfully." });
   } catch (error) {
@@ -178,6 +210,16 @@ export async function assignTask(req, res) {
     task.assignedTo = assignedTo;
     await task.save();
 
+    await createLog({
+      title: "Task Assigned",
+      content: `Task '${task.title}' (ID ${task._id}) assigned to user ID ${assignedTo} by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: assignedTo,
+      projectId: task.projectId,
+      taskId: task._id,
+      priority: "medium",
+    });
+
     return res
       .status(200)
       .json({ message: "Task assignment updated successfully." });
@@ -220,6 +262,16 @@ export async function updateTaskStatus(req, res) {
 
     task.status = status;
     const updatedTask = await task.save();
+
+    await createLog({
+      title: "Task Status Updated",
+      content: `Task '${updatedTask.title}' (ID ${updatedTask._id}) status changed to '${status}' by user ID ${req.userId}`,
+      userCreated: req.userId,
+      userAssigned: updatedTask.assignedTo,
+      projectId: updatedTask.projectId,
+      taskId: updatedTask._id,
+      priority: "low",
+    });
 
     return res
       .status(200)
@@ -300,6 +352,16 @@ export async function comment(req, res) {
 
         // Return the newly added comment (last in array)
         const addedComment = task.comments[task.comments.length - 1];
+
+        await createLog({
+          title: "Task Comment Added",
+          content: `User ID ${userId} commented on task '${task.title}' (ID ${task._id})`,
+          userCreated: userId,
+          userAssigned: task.assignedTo,
+          projectId: task.projectId,
+          taskId: task._id,
+          priority: "low",
+        });
 
         return res.status(201).json({
             message: "Comment added successfully",
