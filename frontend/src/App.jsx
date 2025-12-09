@@ -22,6 +22,7 @@ import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import TasksPage from "./pages/TasksPage";
 import Settings from "./pages/Settings";
+import NotificationsPage from "./pages/NotificationsPage";
 
 // Import project components
 import CreateProject from "./components/projects/CreateProject";
@@ -152,6 +153,10 @@ function App() {
           <Route
             path="tasks"
             element={<TasksPage />}
+          />
+          <Route
+            path="notifications"
+            element={<NotificationsPage />}
           />
           <Route
             path="calendar"

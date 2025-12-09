@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
+import { createServer } from "http";
 import { connectDB } from "./config/db.js";
+import { initializeSocket } from "./config/socket.js";
 import authRouter from "./routes/authRoutes.js";
 import generalCheck from "./middlewares/generalCheck.js";
 import projectRouter from "./routes/projectRoutes.js";
@@ -18,6 +20,11 @@ const extractMongoUsername = (uri) => {
 };
 
 const app = express();
+const httpServer = createServer(app);
+
+// Initialize Socket.IO
+initializeSocket(httpServer);
+
 app.use(
   cors({
     origin: process.env.FRONTEND_URL,
@@ -37,8 +44,9 @@ app.use("/api/notifications", notificationRouter);
 connectDB().then(() => {
   const mongoUsername = extractMongoUsername(process.env.MONGODB_URI);
   console.log(`Connected to MongoDB as user: ${mongoUsername}`);
-  app.listen(PORT, () => {
-    console.log(`server started at port ${PORT}`);
+  httpServer.listen(PORT, () => {
+    console.log(`Server started at port ${PORT}`);
+    console.log(`Socket.IO ready for connections`);
   });
 });
 

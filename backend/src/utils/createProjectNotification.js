@@ -1,7 +1,44 @@
 import createLog from "./createLog.js";
+import Log from "../models/log.js";
+
+/**
+ * Check if an identical notification was just created (within 2 seconds)
+ * Helps prevent duplicate notifications from race conditions
+ * @param {Object} params
+ * @returns {Promise<boolean>} True if duplicate detected
+ */
+async function isDuplicateNotification({
+  userAssigned,
+  type,
+  projectId,
+  taskId,
+  userCreated,
+} = {}) {
+  if (!userAssigned || !type) return false;
+  
+  try {
+    // Look for identical notification created within the last 2 seconds
+    const recentNotification = await Log.findOne({
+      userAssigned,
+      type,
+      projectId,
+      taskId,
+      userCreated,
+      createdAt: {
+        $gte: new Date(Date.now() - 2000) // Last 2 seconds
+      }
+    }).select('_id').lean();
+    
+    return !!recentNotification;
+  } catch (error) {
+    console.error("[isDuplicateNotification] Error checking for duplicate:", error);
+    return false; // On error, allow notification (fail open)
+  }
+}
 
 /**
  * Generate navigation link based on notification type
+ * Uses tab-based navigation for project pages
  * @param {string} type - Notification type
  * @param {string} projectId - Project ID
  * @param {string} taskId - Task ID (optional)
@@ -13,24 +50,32 @@ function generateLink(type, projectId, taskId) {
   const projectBase = `/projects/${projectId}`;
   
   switch (type) {
+    // Task-related notifications - link to specific task when taskId available
     case "TASK_CREATED":
-      return `${projectBase}/tasks`;
+      return `${projectBase}?tab=tasks`;
     case "TASK_ASSIGNED":
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=assignment`;
     case "TASK_STATUS_CHANGED":
     case "TASK_EDITED":
     case "TASK_COMMENT":
-      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}/tasks`;
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=tasks`;
     case "TASK_DELETED":
-      return `${projectBase}/tasks`;
+      return `${projectBase}?tab=tasks`;
+    
+    // Project-related notifications - use correct tab name "members"
+    case "PROJECT_INVITE_SENT":
+      return `${projectBase}?tab=overview`;
     case "PROJECT_INVITE_ACCEPTED":
     case "PROJECT_INVITE_DECLINED":
     case "PROJECT_MEMBER_REMOVED":
     case "PROJECT_ROLE_UPDATED":
     case "PROJECT_OWNERSHIP_TRANSFERRED":
+      return `${projectBase}?tab=members`;
     case "PROJECT_EDITED":
-      return projectBase;
+      return `${projectBase}?tab=overview`;
     case "PROJECT_DELETED":
       return "/projects";
+    
     default:
       return projectBase;
   }
@@ -88,9 +133,23 @@ async function createProjectNotification({
     console.log(`[createProjectNotification] Title: ${title}`);
     console.log(`[createProjectNotification] Link: ${notificationLink}`);
 
-    // Create a separate log for each recipient
-    const notificationPromises = usersToNotify.map((userId) =>
-      createLog({
+    // Create a separate log for each recipient, but check for duplicates first
+    const notificationPromises = usersToNotify.map(async (userId) => {
+      // Check if this exact notification was just created (race condition protection)
+      const isDuplicate = await isDuplicateNotification({
+        userAssigned: userId,
+        type,
+        projectId,
+        taskId,
+        userCreated,
+      });
+
+      if (isDuplicate) {
+        console.log(`[createProjectNotification] Skipping duplicate for user ${userId}`);
+        return null;
+      }
+
+      return createLog({
         title,
         content,
         type,
@@ -100,8 +159,8 @@ async function createProjectNotification({
         taskId,
         priority,
         link: notificationLink,
-      })
-    );
+      });
+    });
 
     const results = await Promise.all(notificationPromises);
     console.log(`[createProjectNotification] Successfully created ${results.filter(Boolean).length} notifications`);

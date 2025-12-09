@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { authService } from '../../api';
+import { connectSocket, disconnectSocket, onNotification } from '../../api/socketService';
 import TopBar from './TopBar';
 import SideBar from './SideBar';
+import NotificationToast from '../common/NotificationToast';
 
 const MainLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [user, setUser] = useState(null);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [toasts, setToasts] = useState([]);
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -23,6 +26,40 @@ const MainLayout = () => {
     // Save current route to localStorage for refresh persistence
     localStorage.setItem('lastRoute', location.pathname);
   }, [location, navigate]);
+
+  // Connect to Socket.IO and listen for real-time notifications
+  useEffect(() => {
+    if (!user) return;
+    
+    // Connect to socket server
+    connectSocket();
+    
+    // Subscribe to new notifications
+    const unsubscribe = onNotification((notification) => {
+      console.log('[Socket.IO] New notification received:', notification);
+      
+      // Add to toasts (show max 5, newest first)
+      setToasts(prev => [notification, ...prev].slice(0, 5));
+    });
+    
+    // Cleanup on unmount or user change
+    return () => {
+      unsubscribe();
+      disconnectSocket();
+    };
+  }, [user]);
+
+  // Remove toast by ID
+  const removeToast = useCallback((id) => {
+    setToasts(prev => prev.filter(t => (t._id || t.id) !== id));
+  }, []);
+
+  // Handle toast click - navigate to notification
+  const handleToastClick = useCallback((notification) => {
+    if (notification.link) {
+      navigate(notification.link);
+    }
+  }, [navigate]);
 
   const handleLogout = async () => {
     setLoggingOut(true);
@@ -111,6 +148,13 @@ const MainLayout = () => {
           </div>
         </div>
       )}
+
+      {/* Notification Toasts */}
+      <NotificationToast 
+        toasts={toasts} 
+        onRemove={removeToast} 
+        onToastClick={handleToastClick} 
+      />
     </div>
   );
 };

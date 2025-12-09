@@ -58,4 +58,17 @@ const logSchema = new mongoose.Schema(
     }
 );
 
+// Compound index to prevent duplicate notifications within 5 seconds
+// This helps prevent race conditions and duplicate notification creation
+logSchema.index(
+    {
+        userAssigned: 1,
+        type: 1,
+        taskId: 1,
+        projectId: 1,
+        createdAt: -1
+    },
+    { name: "notification_dedup_index" }
+);
+
 export default mongoose.model("Log", logSchema);
