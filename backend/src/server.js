@@ -6,6 +6,7 @@ import generalCheck from "./middlewares/generalCheck.js";
 import projectRouter from "./routes/projectRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import logRouter from "./routes/logRoutes.js";
+import notificationRouter from "./routes/notificationRoutes.js";
 const extractMongoUsername = (uri) => {
   try {
     const regex = /mongodb(?:\+srv)?:\/\/([^:]+):/;
@@ -19,7 +20,7 @@ const extractMongoUsername = (uri) => {
 const app = express();
 app.use(
   cors({
-    origin: "http://localhost:5173",
+    origin: process.env.FRONTEND_URL,
     credentials: true,
   })
 );
@@ -31,6 +32,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter);
 app.use("/api/logs", logRouter);
+app.use("/api/notifications", notificationRouter);
 
 connectDB().then(() => {
   const mongoUsername = extractMongoUsername(process.env.MONGODB_URI);
