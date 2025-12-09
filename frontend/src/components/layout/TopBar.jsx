@@ -2,6 +2,7 @@ import React, { useState, Fragment, useEffect, useRef, useCallback } from "react
 import { getInitials, getRandomColor } from "../../utils/avatarUtils";
 import { useNavigate } from "react-router-dom";
 import { projectService, authService, taskService } from '../../api';
+import NotificationDropdown from '../common/NotificationDropdown';
 import {
   Menu,
   MenuButton,
@@ -421,16 +422,10 @@ const TopBar = ({ user, onLogout, loggingOut = false, sidebarOpen, setSidebarOpe
           {/* Divider - Hidden on mobile */}
           <div className="hidden lg:block w-px h-8 bg-gray-200"></div>
 
-          {/* Quick Actions - Hidden on small mobile */}
-          <button
-            className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gray-50 hover:bg-gray-100 hidden sm:flex items-center justify-center transition-all hover:scale-105 active:scale-95 group"
-            title="Notifications"
-          >
-            <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 group-hover:text-[#E31B54] transition-colors" />
-            <span className="absolute -top-1 -right-1 w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-[#E31B54] to-[#E91E63] text-white text-[9px] sm:text-xs font-bold rounded-full flex items-center justify-center animate-pulse shadow-lg">
-              7
-            </span>
-          </button>
+          {/* Notification Dropdown - Hidden on small mobile */}
+          <div className="hidden sm:block">
+            <NotificationDropdown />
+          </div>
 
           {/* Divider */}
           <div className="hidden sm:block w-px h-8 bg-gray-200"></div>

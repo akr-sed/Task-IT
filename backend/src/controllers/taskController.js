@@ -4,7 +4,15 @@
    Controller Functions
 ────────────────────────────────────────────── */
 import Task from "../models/task.js";
+import User from "../models/user.js";
 import checkIfUserBelongsToProject from "../utils/projectBelongCheck.js";
+import createLog from "../utils/createLog.js";
+import createProjectNotification, { 
+  notifyProjectAdmins, 
+  notifyAllProjectMembers,
+  notifyUsers 
+} from "../utils/createProjectNotification.js";
+import Project from "../models/project.js";
 
 // Create new task
 export async function createTask(req, res) {
@@ -59,6 +67,43 @@ export async function createTask(req, res) {
     });
 
     const savedTask = await newTask.save();
+
+    // Get project for notification targeting
+    const project = await Project.findById(projectId);
+    
+    // Get the name of the user who created the task
+    const creator = await User.findById(req.userId);
+    const creatorName = creator?.name || "Someone";
+
+    // Notify project admins and owner about new task
+    await notifyProjectAdmins({
+      project,
+      projectId,
+      taskId: savedTask._id,
+      userCreated: req.userId,
+      title: "New Task Created",
+      content: `${creatorName} created task "${title}" in ${project?.displayName || project?.name || "the project"}`,
+      type: "TASK_CREATED",
+      priority: "medium",
+      includeOwner: true,
+      excludeUserId: req.userId,
+    });
+
+    // If task is assigned to someone, notify them separately
+    if (assignedTo && assignedTo.toString() !== req.userId.toString()) {
+      await notifyUsers({
+        userIds: [assignedTo],
+        projectId,
+        taskId: savedTask._id,
+        userCreated: req.userId,
+        title: "Task Assigned to You",
+        content: `${creatorName} created and assigned you to task "${title}"`,
+        type: "TASK_ASSIGNED",
+        priority: "high",
+        excludeUserId: req.userId,
+      });
+    }
+
     return res
       .status(201)
       .json({ message: "task created successfully", task: savedTask });
@@ -95,6 +140,26 @@ export async function editTask(req, res) {
     });
 
     const updatedTask = await task.save();
+
+    // Get project and editor info for notifications
+    const project = await Project.findById(updatedTask.projectId);
+    const editor = await User.findById(req.userId);
+    const editorName = editor?.name || "Someone";
+
+    // Only notify if there's an assigned user (who isn't the editor)
+    if (updatedTask.assignedTo && updatedTask.assignedTo.toString() !== req.userId.toString()) {
+      await notifyUsers({
+        userIds: [updatedTask.assignedTo],
+        projectId: updatedTask.projectId,
+        taskId: updatedTask._id,
+        userCreated: req.userId,
+        title: "Task Updated",
+        content: `${editorName} updated task "${updatedTask.title}" assigned to you`,
+        type: "TASK_EDITED",
+        priority: "low",
+        excludeUserId: req.userId,
+      });
+    }
 
     return res
       .status(200)
@@ -135,6 +200,26 @@ export async function deleteTask(req, res) {
     // no need for additional check since the middleware already did it
 
     await Task.findByIdAndDelete(task._id);
+
+    // Get project and deleter info
+    const project = await Project.findById(task.projectId);
+    const deleter = await User.findById(req.userId);
+    const deleterName = deleter?.name || "Someone";
+
+    // Notify the assigned user if the task was assigned (and it's not the deleter)
+    if (task.assignedTo && task.assignedTo.toString() !== req.userId.toString()) {
+      await notifyUsers({
+        userIds: [task.assignedTo],
+        projectId: task.projectId,
+        taskId: task._id,
+        userCreated: req.userId,
+        title: "Task Deleted",
+        content: `${deleterName} deleted task "${task.title}" that was assigned to you`,
+        type: "TASK_DELETED",
+        priority: "high",
+        excludeUserId: req.userId,
+      });
+    }
 
     return res.status(200).json({ message: "Task deleted successfully." });
   } catch (error) {
@@ -178,6 +263,42 @@ export async function assignTask(req, res) {
     task.assignedTo = assignedTo;
     await task.save();
 
+    // Get assigner info
+    const project = await Project.findById(task.projectId);
+    const assigner = await User.findById(req.userId);
+    const assignerName = assigner?.name || "Someone";
+    const assignee = await User.findById(assignedTo);
+    const assigneeName = assignee?.name || "a team member";
+
+    // Notify the assigned user
+    if (assignedTo.toString() !== req.userId.toString()) {
+      await notifyUsers({
+        userIds: [assignedTo],
+        projectId: task.projectId,
+        taskId: task._id,
+        userCreated: req.userId,
+        title: "Task Assigned to You",
+        content: `${assignerName} assigned you to task "${task.title}"`,
+        type: "TASK_ASSIGNED",
+        priority: "high",
+        excludeUserId: req.userId,
+      });
+    }
+
+    // Notify project admins about the assignment
+    await notifyProjectAdmins({
+      project,
+      projectId: task.projectId,
+      taskId: task._id,
+      userCreated: req.userId,
+      title: "Task Assignment Updated",
+      content: `${assignerName} assigned "${task.title}" to ${assigneeName}`,
+      type: "TASK_ASSIGNED",
+      priority: "low",
+      includeOwner: true,
+      excludeUserId: req.userId,
+    });
+
     return res
       .status(200)
       .json({ message: "Task assignment updated successfully." });
@@ -220,6 +341,28 @@ export async function updateTaskStatus(req, res) {
 
     task.status = status;
     const updatedTask = await task.save();
+
+    // Get project and user info for notifications
+    const project = await Project.findById(updatedTask.projectId);
+    const updater = await User.findById(req.userId);
+    const updaterName = updater?.name || "Someone";
+
+    // Format status for display
+    const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+
+    // Notify all project members about status change (it's important for everyone to see progress)
+    await notifyAllProjectMembers({
+      project,
+      projectId: updatedTask.projectId,
+      taskId: updatedTask._id,
+      userCreated: req.userId,
+      title: `Task Status: ${statusDisplay}`,
+      content: `${updaterName} changed "${updatedTask.title}" status to "${statusDisplay}"`,
+      type: "TASK_STATUS_CHANGED",
+      priority: status === "done" ? "medium" : "low",
+      includeOwner: true,
+      excludeUserId: req.userId,
+    });
 
     return res
       .status(200)
@@ -300,6 +443,34 @@ export async function comment(req, res) {
 
         // Return the newly added comment (last in array)
         const addedComment = task.comments[task.comments.length - 1];
+
+        // Get commenter info
+        const project = await Project.findById(task.projectId);
+        const commenter = await User.findById(userId);
+        const commenterName = commenter?.name || "Someone";
+
+        // Build list of users to notify about the comment
+        const usersToNotify = [];
+        
+        // Add task assignee if not the commenter
+        if (task.assignedTo && task.assignedTo.toString() !== userId.toString()) {
+          usersToNotify.push(task.assignedTo.toString());
+        }
+        
+        // Notify those users about the comment
+        if (usersToNotify.length > 0) {
+          await notifyUsers({
+            userIds: usersToNotify,
+            projectId: task.projectId,
+            taskId: task._id,
+            userCreated: userId,
+            title: "New Comment on Your Task",
+            content: `${commenterName} commented on "${task.title}": "${text.substring(0, 50)}${text.length > 50 ? '...' : ''}"`,
+            type: "TASK_COMMENT",
+            priority: "medium",
+            excludeUserId: userId,
+          });
+        }
 
         return res.status(201).json({
             message: "Comment added successfully",

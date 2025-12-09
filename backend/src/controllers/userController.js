@@ -112,6 +112,8 @@ export const verifyEmail = async (req, res, next) => {
     await TempUser.findByIdAndDelete(tempUserId);
     await Code.findByIdAndDelete(codeRecord._id);
 
+    // FIXME mayber create log for initial notification that welcomes the user 
+
     req.user = newUser;
     req.userId = newUser._id;
     next();
