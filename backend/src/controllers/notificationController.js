@@ -14,14 +14,16 @@ export async function getMyNotifications(req, res) {
     }
 
     // Query params for filtering
-    const { unread, page = 1, limit = 20 } = req.query;
-    console.log('Query params:', { unread, page, limit });
+    const { unread, read, page = 1, limit = 20 } = req.query;
+    console.log('Query params:', { unread, read, page, limit });
 
     const query = { userAssigned: userId };
 
-    // Optional: filter by unread status
+    // Filter by read status
     if (unread === "true") {
       query.isRead = false;
+    } else if (read === "true") {
+      query.isRead = true;
     }
 
     console.log('MongoDB query:', JSON.stringify(query, null, 2));
@@ -30,7 +32,7 @@ export async function getMyNotifications(req, res) {
     console.log('Skip:', skip, 'Limit:', parseInt(limit));
 
     console.log('Executing database query...');
-    const [notifications, total] = await Promise.all([
+    const [notifications, total, unreadTotal] = await Promise.all([
       Log.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)
@@ -40,10 +42,12 @@ export async function getMyNotifications(req, res) {
         .populate("taskId", "title")
         .lean(),
       Log.countDocuments(query),
+      Log.countDocuments({ userAssigned: userId, isRead: false }),
     ]);
 
     console.log('Query results:');
     console.log('- Total matching logs:', total);
+    console.log('- Unread total:', unreadTotal);
     console.log('- Notifications returned:', notifications.length);
     if (notifications[0]) {
       console.log('- First notification sample:');
@@ -62,6 +66,7 @@ export async function getMyNotifications(req, res) {
         total,
         totalPages: Math.ceil(total / parseInt(limit)),
       },
+      unreadCount: unreadTotal,
     };
 
     console.log('Sending response with', notifications.length, 'notifications');
@@ -181,6 +186,110 @@ export async function markAllAsRead(req, res) {
     console.error(error.stack);
     return res.status(500).json({ 
       message: "Failed to mark all as read",
+      error: error.message 
+    });
+  }
+}
+
+// DELETE /api/notifications/:id
+// Delete a single notification
+export async function deleteNotification(req, res) {
+  try {
+    console.log('=== DELETE /api/notifications/:id ===');
+    const userId = req.userId;
+    const { id } = req.params;
+    console.log('User ID:', userId, 'Notification ID:', id);
+
+    if (!userId) {
+      console.log('ERROR: No userId');
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    // Only allow users to delete their own notifications
+    const notification = await Log.findOneAndDelete({
+      _id: id,
+      userAssigned: userId,
+    });
+
+    if (!notification) {
+      console.log('ERROR: Notification not found or user not authorized');
+      return res.status(404).json({ message: "Notification not found" });
+    }
+
+    console.log('Successfully deleted notification:', id);
+    console.log('=== END DELETE /api/notifications/:id ===\n');
+    return res.status(200).json({ message: "Notification deleted successfully" });
+  } catch (error) {
+    console.error("ERROR in deleteNotification:", error.message);
+    console.error(error.stack);
+    return res.status(500).json({ 
+      message: "Failed to delete notification",
+      error: error.message 
+    });
+  }
+}
+
+// DELETE /api/notifications/me/all
+// Delete all notifications for current user
+export async function deleteAllNotifications(req, res) {
+  try {
+    console.log('=== DELETE /api/notifications/me/all ===');
+    const userId = req.userId;
+    console.log('User ID:', userId);
+
+    if (!userId) {
+      console.log('ERROR: No userId');
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    console.log('Deleting all notifications for user...');
+    const result = await Log.deleteMany({ userAssigned: userId });
+
+    console.log('Deleted count:', result.deletedCount);
+    console.log('=== END DELETE /api/notifications/me/all ===\n');
+
+    return res.status(200).json({
+      message: "All notifications deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("ERROR in deleteAllNotifications:", error.message);
+    console.error(error.stack);
+    return res.status(500).json({ 
+      message: "Failed to delete all notifications",
+      error: error.message 
+    });
+  }
+}
+
+// DELETE /api/notifications/me/read
+// Delete all read notifications for current user
+export async function deleteReadNotifications(req, res) {
+  try {
+    console.log('=== DELETE /api/notifications/me/read ===');
+    const userId = req.userId;
+    console.log('User ID:', userId);
+
+    if (!userId) {
+      console.log('ERROR: No userId');
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    console.log('Deleting all read notifications for user...');
+    const result = await Log.deleteMany({ userAssigned: userId, isRead: true });
+
+    console.log('Deleted count:', result.deletedCount);
+    console.log('=== END DELETE /api/notifications/me/read ===\n');
+
+    return res.status(200).json({
+      message: "All read notifications deleted successfully",
+      deletedCount: result.deletedCount,
+    });
+  } catch (error) {
+    console.error("ERROR in deleteReadNotifications:", error.message);
+    console.error(error.stack);
+    return res.status(500).json({ 
+      message: "Failed to delete read notifications",
       error: error.message 
     });
   }

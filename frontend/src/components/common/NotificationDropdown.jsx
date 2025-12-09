@@ -1,9 +1,10 @@
-import React, { useState, useEffect, Fragment, useRef } from 'react';
+import React, { useState, useEffect, Fragment, useRef, useCallback } from 'react';
 import { Menu, MenuButton, MenuItems, MenuItem, Transition } from '@headlessui/react';
-import { Bell, User, FolderKanban, CheckCircle2, AlertCircle, MessageCircle, UserPlus, UserMinus, Crown, Edit, Trash2 } from 'lucide-react';
+import { Bell, User, FolderKanban, CheckCircle2, AlertCircle, MessageCircle, UserPlus, UserMinus, Crown, Edit, Trash2, ExternalLink, X } from 'lucide-react';
 import { notificationService } from '../../api';
+import { onNotification, getSocket, emitLocal, onLocal } from '../../api/socketService';
 import { formatDistanceToNow } from '../../utils/dateUtils';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 /**
  * Notification type to icon mapping
@@ -31,12 +32,41 @@ const NotificationDropdown = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [deleting, setDeleting] = useState(null);
   const hasLoadedRef = useRef(false);
   const navigate = useNavigate();
+
+  // Fetch unread count
+  const fetchUnreadCount = useCallback(async () => {
+    try {
+      const response = await notificationService.getUnreadCount();
+      setUnreadCount(response.data.unreadCount);
+    } catch {
+      // Silently fail
+    }
+  }, []);
 
   // Fetch unread count on mount
   useEffect(() => {
     fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  // Listen for real-time notifications via Socket.IO
+  useEffect(() => {
+    const socket = getSocket();
+    if (!socket) return;
+
+    // Subscribe to new notifications
+    const unsubscribe = onNotification((notification) => {
+      // Add to notifications list (newest first)
+      setNotifications(prev => [notification, ...prev].slice(0, 10));
+      // Increment unread count
+      setUnreadCount(prev => prev + 1);
+    });
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   // Fetch notifications when dropdown opens for the first time
@@ -47,21 +77,48 @@ const NotificationDropdown = () => {
     }
   }, [isOpen]);
 
-  const fetchUnreadCount = async () => {
-    try {
-      const response = await notificationService.getUnreadCount();
-      setUnreadCount(response.data.unreadCount);
-    } catch (error) {
-      console.error('Error fetching unread count:', error);
-    }
-  };
+  // Listen for local events from other components (e.g., NotificationsPage)
+  useEffect(() => {
+    // When a notification is deleted elsewhere
+    const unsubDelete = onLocal("notification:deleted", ({ id, wasUnread }) => {
+      setNotifications(prev => prev.filter(n => n._id !== id));
+      if (wasUnread) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+    });
+
+    // When a notification is marked as read elsewhere
+    const unsubRead = onLocal("notification:read", ({ id }) => {
+      setNotifications(prev =>
+        prev.map(n => n._id === id ? { ...n, isRead: true } : n)
+      );
+      setUnreadCount(prev => Math.max(0, prev - 1));
+    });
+
+    // When all notifications are marked as read elsewhere
+    const unsubAllRead = onLocal("notification:allRead", () => {
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      setUnreadCount(0);
+    });
+
+    // When all notifications are deleted elsewhere
+    const unsubAllDeleted = onLocal("notification:allDeleted", () => {
+      setNotifications([]);
+      setUnreadCount(0);
+    });
+
+    return () => {
+      unsubDelete();
+      unsubRead();
+      unsubAllRead();
+      unsubAllDeleted();
+    };
+  }, []);
 
   const fetchNotifications = async () => {
     setLoading(true);
     try {
       const response = await notificationService.getMyNotifications({ limit: 10 });
-      console.log('Notifications response:', response.data);
-      console.log('First notification detail:', response.data.notifications[0]);
       setNotifications(response.data.notifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -72,7 +129,7 @@ const NotificationDropdown = () => {
 
   const handleRefresh = async () => {
     hasLoadedRef.current = false;
-    await fetchNotifications();
+    await Promise.all([fetchNotifications(), fetchUnreadCount()]);
     hasLoadedRef.current = true;
   };
 
@@ -120,29 +177,37 @@ const NotificationDropdown = () => {
     
     switch (type) {
       case 'TASK_CREATED':
-        if (projectId) navigate(`/projects/${projectId}/tasks`);
+        if (projectId) navigate(`/projects/${projectId}?tab=tasks`);
         break;
       case 'TASK_ASSIGNED':
+        if (projectId && taskId) {
+          navigate(`/projects/${projectId}/tasks/${taskId}`);
+        } else if (projectId) {
+          navigate(`/projects/${projectId}?tab=assignment`);
+        }
+        break;
       case 'TASK_STATUS_CHANGED':
       case 'TASK_EDITED':
       case 'TASK_COMMENT':
         if (projectId && taskId) {
-          navigate(`/projects/${projectId}/tasks/${taskId}/`);
+          navigate(`/projects/${projectId}/tasks/${taskId}`);
         } else if (projectId) {
-          navigate(`/projects/${projectId}/tasks`);
+          navigate(`/projects/${projectId}?tab=tasks`);
         }
         break;
       case 'TASK_DELETED':
-        if (projectId) navigate(`/projects/${projectId}/tasks`);
+        if (projectId) navigate(`/projects/${projectId}?tab=tasks`);
         break;
       case 'PROJECT_INVITE_SENT':
+      case 'PROJECT_EDITED':
+        if (projectId) navigate(`/projects/${projectId}?tab=overview`);
+        break;
       case 'PROJECT_INVITE_ACCEPTED':
       case 'PROJECT_INVITE_DECLINED':
       case 'PROJECT_MEMBER_REMOVED':
       case 'PROJECT_ROLE_UPDATED':
       case 'PROJECT_OWNERSHIP_TRANSFERRED':
-      case 'PROJECT_EDITED':
-        if (projectId) navigate(`/projects/${projectId}`);
+        if (projectId) navigate(`/projects/${projectId}?tab=members`);
         break;
       case 'PROJECT_DELETED':
         navigate('/projects');
@@ -163,8 +228,38 @@ const NotificationDropdown = () => {
       );
       
       setUnreadCount(0);
+      
+      // Emit local event for cross-component sync
+      emitLocal("notification:allRead", {});
     } catch (error) {
       console.error('Error marking all as read:', error);
+    }
+  };
+
+  const handleDeleteNotification = async (e, notificationId) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setDeleting(notificationId);
+    try {
+      await notificationService.deleteNotification(notificationId);
+      
+      // Check if it was unread
+      const wasUnread = notifications.find(n => n._id === notificationId)?.isRead === false;
+      
+      // Update local state
+      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      
+      // Update unread count if needed
+      if (wasUnread) {
+        setUnreadCount(prev => Math.max(0, prev - 1));
+      }
+      
+      // Emit local event for cross-component sync
+      emitLocal("notification:deleted", { id: notificationId, wasUnread });
+    } catch (error) {
+      console.error('Error deleting notification:', error);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -324,14 +419,24 @@ const NotificationDropdown = () => {
                               </div>
 
                               <div className="flex-1 min-w-0">
-                                {/* Title with unread indicator */}
+                                {/* Title with unread indicator and delete button */}
                                 <div className="flex items-start justify-between gap-2 mb-1">
                                   <h4 className="text-sm font-semibold text-gray-900 line-clamp-1">
                                     {formatNotificationTitle(notification)}
                                   </h4>
-                                  {!notification.isRead && (
-                                    <span className="flex-shrink-0 w-2 h-2 bg-blue-600 rounded-full mt-1.5"></span>
-                                  )}
+                                  <div className="flex items-center gap-1 flex-shrink-0">
+                                    {!notification.isRead && (
+                                      <span className="w-2 h-2 bg-blue-600 rounded-full"></span>
+                                    )}
+                                    <button
+                                      onClick={(e) => handleDeleteNotification(e, notification._id)}
+                                      disabled={deleting === notification._id}
+                                      className="p-1 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors"
+                                      title="Delete notification"
+                                    >
+                                      <X className={`w-3.5 h-3.5 ${deleting === notification._id ? 'animate-pulse' : ''}`} />
+                                    </button>
+                                  </div>
                                 </div>
 
                                 {/* Content */}
@@ -383,16 +488,23 @@ const NotificationDropdown = () => {
               </div>
 
               {/* Footer */}
-              {notifications.length > 0 && (
-                <div className="px-4 py-3 border-t border-gray-200">
+              <div className="px-4 py-3 border-t border-gray-200 flex items-center justify-between gap-4">
+                {notifications.length > 0 && (
                   <button
                     onClick={handleRefresh}
-                    className="text-sm text-blue-600 hover:text-blue-700 font-medium w-full text-center"
+                    className="text-sm text-gray-500 hover:text-gray-700 font-medium"
                   >
                     Refresh
                   </button>
-                </div>
-              )}
+                )}
+                <Link
+                  to="/notifications"
+                  className="text-sm text-blue-600 hover:text-blue-700 font-medium flex items-center gap-1 ml-auto"
+                >
+                  View all
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </Link>
+              </div>
             </MenuItems>
           </Transition>
         </>

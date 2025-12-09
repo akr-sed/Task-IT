@@ -285,19 +285,27 @@ export async function assignTask(req, res) {
       });
     }
 
-    // Notify project admins about the assignment
-    await notifyProjectAdmins({
-      project,
-      projectId: task.projectId,
-      taskId: task._id,
-      userCreated: req.userId,
-      title: "Task Assignment Updated",
-      content: `${assignerName} assigned "${task.title}" to ${assigneeName}`,
-      type: "TASK_ASSIGNED",
-      priority: "low",
-      includeOwner: true,
-      excludeUserId: req.userId,
-    });
+    // Notify project admins ONLY if assignee is not already an admin (avoid duplicate notifications)
+    const assigneeIsAdmin = assignedTo && project.members?.some(
+      m => m.id?.toString() === assignedTo.toString() && m.role === "admin"
+    );
+    const isAssigneeOwner = assignedTo && project.ownedBy?.toString() === assignedTo.toString();
+
+    // Only notify admins if the assignee is not an admin/owner (they already got the direct notification)
+    if (!assigneeIsAdmin && !isAssigneeOwner) {
+      await notifyProjectAdmins({
+        project,
+        projectId: task.projectId,
+        taskId: task._id,
+        userCreated: req.userId,
+        title: "Task Assignment Updated",
+        content: `${assignerName} assigned "${task.title}" to ${assigneeName}`,
+        type: "TASK_ASSIGNED",
+        priority: "low",
+        includeOwner: true,
+        excludeUserId: req.userId,
+      });
+    }
 
     return res
       .status(200)
@@ -347,8 +355,11 @@ export async function updateTaskStatus(req, res) {
     const updater = await User.findById(req.userId);
     const updaterName = updater?.name || "Someone";
 
-    // Format status for display
-    const statusDisplay = status.charAt(0).toUpperCase() + status.slice(1);
+    // Format status for display (handle multi-word statuses like "in progress")
+    const statusDisplay = status
+      .split(' ')
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(' ');
 
     // Notify all project members about status change (it's important for everyone to see progress)
     await notifyAllProjectMembers({

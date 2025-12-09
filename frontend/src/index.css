@@ -141,4 +141,18 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
   }
+
+  /* Toast progress bar animation */
+  .animate-shrink-width {
+    animation: shrink-width linear forwards;
+  }
+
+  @keyframes shrink-width {
+    from {
+      width: 100%;
+    }
+    to {
+      width: 0%;
+    }
+  }
 }

@@ -11,7 +11,8 @@ const notificationService = {
   /**
    * Get notifications for the authenticated user
    * @param {Object} params - Query parameters
-   * @param {boolean} params.unread - Filter by unread status
+   * @param {boolean} params.unread - Filter by unread only
+   * @param {boolean} params.read - Filter by read only
    * @param {number} params.page - Page number
    * @param {number} params.limit - Items per page
    * @returns {Promise} Response with notifications array and pagination
@@ -21,6 +22,9 @@ const notificationService = {
     
     if (params.unread !== undefined) {
       queryParams.append('unread', params.unread);
+    }
+    if (params.read !== undefined) {
+      queryParams.append('read', params.read);
     }
     if (params.page) {
       queryParams.append('page', params.page);
@@ -58,6 +62,34 @@ const notificationService = {
    */
   markAllAsRead: async () => {
     const response = await api.patch('/notifications/me/read-all');
+    return response;
+  },
+
+  /**
+   * Delete a single notification
+   * @param {string} notificationId - Notification ID
+   * @returns {Promise} Response with success message
+   */
+  deleteNotification: async (notificationId) => {
+    const response = await api.delete(`/notifications/${notificationId}`);
+    return response;
+  },
+
+  /**
+   * Delete all notifications for current user
+   * @returns {Promise} Response with deleted count
+   */
+  deleteAllNotifications: async () => {
+    const response = await api.delete('/notifications/me/all');
+    return response;
+  },
+
+  /**
+   * Delete all read notifications for current user
+   * @returns {Promise} Response with deleted count
+   */
+  deleteReadNotifications: async () => {
+    const response = await api.delete('/notifications/me/read');
     return response;
   },
 };

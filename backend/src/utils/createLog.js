@@ -1,4 +1,5 @@
 import Log from "../models/log.js";
+import { emitToUser } from "../config/socket.js";
 
 const removeUndefinedFields = (payload = {}) => {
   const cleanedPayload = { ...payload }; // create a copy
@@ -23,29 +24,31 @@ function generateLink(type, projectId, taskId) {
   const projectBase = `/projects/${projectId}`;
   
   switch (type) {
-    // Task-related notifications
+    // Task-related notifications - link to specific task when taskId available
     case "TASK_CREATED":
-      return `${projectBase}/tasks`;
+      return `${projectBase}?tab=tasks`;
     case "TASK_ASSIGNED":
-      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}/tasks`;
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=assignment`;
     case "TASK_STATUS_CHANGED":
-      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}/tasks`;
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=tasks`;
     case "TASK_EDITED":
-      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}/tasks`;
-    case "TASK_DELETED":
-      return `${projectBase}/tasks`;
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=tasks`;
     case "TASK_COMMENT":
-      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}/tasks`;
+      return taskId ? `${projectBase}/tasks/${taskId}` : `${projectBase}?tab=tasks`;
+    case "TASK_DELETED":
+      return `${projectBase}?tab=tasks`;
     
-    // Project-related notifications  
+    // Project-related notifications - use correct tab name "members"
     case "PROJECT_INVITE_SENT":
+      return `${projectBase}?tab=overview`;
     case "PROJECT_INVITE_ACCEPTED":
     case "PROJECT_INVITE_DECLINED":
     case "PROJECT_MEMBER_REMOVED":
     case "PROJECT_ROLE_UPDATED":
     case "PROJECT_OWNERSHIP_TRANSFERRED":
+      return `${projectBase}?tab=members`;
     case "PROJECT_EDITED":
-      return projectBase;
+      return `${projectBase}?tab=overview`;
     case "PROJECT_DELETED":
       return "/projects";
     
@@ -86,7 +89,27 @@ async function createLog({
   });
 
   try {
-    return await Log.create(logPayload);
+    const log = await Log.create(logPayload);
+    
+    // Emit real-time notification to the assigned user via Socket.IO
+    if (userAssigned && log) {
+      const notificationData = {
+        _id: log._id,
+        title: log.title,
+        content: log.content,
+        type: log.type,
+        priority: log.priority,
+        link: log.link,
+        projectId: log.projectId,
+        taskId: log.taskId,
+        isRead: false,
+        createdAt: log.createdAt,
+      };
+      
+      emitToUser(userAssigned.toString(), "notification:new", notificationData);
+    }
+    
+    return log;
   } catch (error) {
     console.error("Failed to persist log entry:", error);
     return null;
