@@ -3,6 +3,11 @@ import User from "../models/user.js";
 import Invite from "../models/invite.js";
 import { sendProjectInvitation } from "../utils/sendEmail.js";
 import createLog from "../utils/createLog.js";
+import createProjectNotification, { 
+  notifyProjectAdmins, 
+  notifyAllProjectMembers,
+  notifyUsers 
+} from "../utils/createProjectNotification.js";
 import dotenv from "dotenv";
 dotenv.config();
 
@@ -38,13 +43,14 @@ export async function createProject(req, res) {
     await newProject.save();
 
     // LOG USER ACTION
-    await createLog({
-      title: "Project Created",
-      content: `Project '${name}' created by user ID ${req.userId}`,
-      userCreated: req.userId,
-      projectId: newProject._id,
-      priority: "low",
-    });
+    // FIXME : later this should be taken care of
+    // await createLog({
+    //   title: "Project Created",
+    //   content: `Project '${name}' created by user ID ${req.userId}`,
+    //   userCreated: req.userId,
+    //   projectId: newProject._id,
+    //   priority: "low",
+    // });
 
     res
       .status(201)
@@ -82,12 +88,21 @@ export async function editProject(req, res) {
 
   await project.save();
 
-  await createLog({
-    title: "Project Edited",
-    content: `Project '${project.name}' edited by user ID ${req.userId}`,
-    userCreated: req.userId,
+  // Get editor info
+  const editor = await User.findById(req.userId);
+  const editorName = editor?.name || "Someone";
+
+  // Notify all project members about the edit
+  await notifyAllProjectMembers({
+    project,
     projectId: project._id,
+    userCreated: req.userId,
+    title: "Project Updated",
+    content: `${editorName} updated project "${project.displayName || project.name}"`,
+    type: "PROJECT_EDITED",
     priority: "low",
+    includeOwner: true,
+    excludeUserId: req.userId,
   });
 
   res.status(200).json({ message: "Project updated successfully", project });
@@ -110,13 +125,14 @@ export async function fetchProjects(req, res) {
     const projects = await Project.find({
       $or: [{ ownedBy: userId }, { "members.id": userId }],
     });
+    // FIXME : later this should be taken care of
 
-    await createLog({
-      title: "Projects Retrieved",
-      content: `User ID ${userId} fetched their project list`,
-      userCreated: userId,
-      priority: "low",
-    });
+    // await createLog({
+    //   title: "Projects Retrieved",
+    //   content: `User ID ${userId} fetched their project list`,
+    //   userCreated: userId,
+    //   priority: "low",
+    // });
 
     res.status(200).json({ projects });
   } catch (error) {
@@ -133,16 +149,31 @@ export async function deleteProject(req, res) {
       .json({ message: "You do not have permission to delete this project" });
   try {
     const project = req.project; // Retrieved from permission middleware
+    
+    // Get deleter info before deletion
+    const deleter = await User.findById(req.userId);
+    const deleterName = deleter?.name || "Someone";
+    const projectName = project.displayName || project.name;
+    
+    // Collect member IDs before deletion for notification
+    const memberIds = project.members?.map(m => m.id) || [];
+    
     await Project.findByIdAndDelete(project._id);
     await Invite.deleteMany({ projectId: project._id });
 
-    await createLog({
-      title: "Project Deleted",
-      content: `Project '${project.name}' deleted by user ID ${req.userId}`,
-      userCreated: req.userId,
-      projectId: project._id,
-      priority: "high",
-    });
+    // Notify all former members that the project was deleted
+    if (memberIds.length > 0) {
+      await notifyUsers({
+        userIds: memberIds,
+        projectId: null, // Project no longer exists
+        userCreated: req.userId,
+        title: "Project Deleted",
+        content: `${deleterName} deleted the project "${projectName}"`,
+        type: "PROJECT_DELETED",
+        priority: "high",
+        excludeUserId: req.userId,
+      });
+    }
 
     res.status(200).json({ message: "Project deleted successfully" });
   } catch (error) {
@@ -177,13 +208,35 @@ export async function updateRole(req, res) {
     member.role = role;
     await project.save();
 
-    await createLog({
-      title: "Member Role Updated",
-      content: `Member ID ${memberId} role updated to '${role}' by user ID ${req.userId} in project '${project.name}'`,
-      userCreated: req.userId,
-      userAssigned: memberId,
+    // Get updater and affected member info
+    const updater = await User.findById(req.userId);
+    const updaterName = updater?.name || "Someone";
+    const affectedMember = await User.findById(memberId);
+    const memberName = affectedMember?.name || "A member";
+
+    // Notify the member whose role was updated
+    await notifyUsers({
+      userIds: [memberId],
       projectId: project._id,
+      userCreated: req.userId,
+      title: "Your Role Updated",
+      content: `${updaterName} changed your role to "${role}" in "${project.displayName || project.name}"`,
+      type: "PROJECT_ROLE_UPDATED",
       priority: "medium",
+      excludeUserId: req.userId,
+    });
+
+    // Notify other admins
+    await notifyProjectAdmins({
+      project,
+      projectId: project._id,
+      userCreated: req.userId,
+      title: "Member Role Updated",
+      content: `${updaterName} changed ${memberName}'s role to "${role}"`,
+      type: "PROJECT_ROLE_UPDATED",
+      priority: "low",
+      includeOwner: true,
+      excludeUserId: req.userId,
     });
 
     res
@@ -252,14 +305,35 @@ export async function deleteUser(req, res) {
       });
     }
 
-    // LOG USER ACTION
-    await createLog({
-      title: "Member Removed from Project",
-      content: `Member ID ${userId} removed by user ID ${req.userId} from project '${project.name}'`,
-      userCreated: req.userId,
-      userAssigned: userId,
+    // Get remover and removed member info
+    const remover = await User.findById(req.userId);
+    const removerName = remover?.name || "Someone";
+    const removedMember = await User.findById(userId);
+    const memberName = removedMember?.name || "A member";
+
+    // Notify the removed member
+    await notifyUsers({
+      userIds: [userId],
       projectId: project._id,
+      userCreated: req.userId,
+      title: "Removed from Project",
+      content: `${removerName} removed you from "${project.displayName || project.name}"`,
+      type: "PROJECT_MEMBER_REMOVED",
       priority: "high",
+      excludeUserId: req.userId,
+    });
+
+    // Notify admins about the removal
+    await notifyProjectAdmins({
+      project: updatedProject,
+      projectId: project._id,
+      userCreated: req.userId,
+      title: "Member Removed",
+      content: `${removerName} removed ${memberName} from the project`,
+      type: "PROJECT_MEMBER_REMOVED",
+      priority: "low",
+      includeOwner: true,
+      excludeUserId: req.userId,
     });
 
     // Return success response
@@ -316,27 +390,39 @@ export async function transferOwner(req, res) {
       role: "admin",
     });
 
-    // LOG USER ACTION
-    await createLog({
-      title: "Project Ownership Transferred",
-      content: `Project '${project.name}' ownership transferred to user ID ${newOwnerId} by user ID ${req.userId}`,
-      userCreated: req.userId,
-      userAssigned: newOwnerId,
-      projectId: project._id,
-      priority: "high",
-    });
-
-    // LOG Role Change
-    await createLog({
-      title: "Member Role Updated",
-      content: `Previous owner ID ${previousOwnerId} role updated to 'admin' in project '${project.name}'`,
-      userCreated: req.userId,
-      userAssigned: previousOwnerId,
-      projectId: project._id,
-      priority: "low",
-    });
-
     await project.save();
+
+    // Get user names for notifications
+    const transferrer = await User.findById(req.userId);
+    const transferrerName = transferrer?.name || "Someone";
+    const newOwner = await User.findById(newOwnerId);
+    const newOwnerName = newOwner?.name || "Someone";
+
+    // Notify the new owner
+    await notifyUsers({
+      userIds: [newOwnerId],
+      projectId: project._id,
+      userCreated: req.userId,
+      title: "You're Now the Project Owner",
+      content: `${transferrerName} transferred ownership of "${project.displayName || project.name}" to you`,
+      type: "PROJECT_OWNERSHIP_TRANSFERRED",
+      priority: "high",
+      excludeUserId: req.userId,
+    });
+
+    // Notify all members about ownership change
+    await notifyAllProjectMembers({
+      project,
+      projectId: project._id,
+      userCreated: req.userId,
+      title: "Project Ownership Changed",
+      content: `${newOwnerName} is now the owner of "${project.displayName || project.name}"`,
+      type: "PROJECT_OWNERSHIP_TRANSFERRED",
+      priority: "medium",
+      includeOwner: false, // New owner already notified above
+      excludeUserId: req.userId,
+    });
+
     res
       .status(200)
       .json({ message: "Project ownership transferred successfully", project });
@@ -425,14 +511,23 @@ export async function invite(
       inviteLink
     );
 
-    await createLog({
-      title: "Project Invitation Sent",
-      content: `User ID ${req.userId} invited ${invitedEmail} to project '${project.name}'`,
-      userCreated: req.userId,
-      userAssigned: invitedUser ? invitedUser._id : undefined,
-      projectId: project._id,
-      priority: "medium",
-    });
+    // Get inviter name
+    const inviter = await User.findById(req.userId);
+    const inviterName = inviter?.name || "Someone";
+
+    // Notify the invited user (if they exist in the system)
+    if (invitedUser) {
+      await notifyUsers({
+        userIds: [invitedUser._id],
+        projectId: project._id,
+        userCreated: req.userId,
+        title: "Project Invitation",
+        content: `${inviterName} invited you to join "${project.displayName || project.name}"`,
+        type: "PROJECT_INVITE_SENT",
+        priority: "high",
+        link: inviteLink,
+      });
+    }
 
     return res.status(200).json({
       message: "Invitation sent successfully",
@@ -504,13 +599,21 @@ export async function acceptInvite(req, res) {
     await project.save();
     await Invite.findByIdAndDelete(inviteId);
 
-    await createLog({
-      title: "Project Invitation Accepted",
-      content: `User ID ${userId} joined project '${project.name}' via invitation`,
-      userCreated: userId,
-      userAssigned: userId,
+    // Get the new member's name
+    const newMember = await User.findById(userId);
+    const newMemberName = newMember?.name || "Someone";
+
+    // Notify the project owner and admins
+    await notifyProjectAdmins({
+      project,
       projectId: project._id,
+      userCreated: userId,
+      title: "New Team Member Joined",
+      content: `${newMemberName} accepted the invitation and joined "${project.displayName || project.name}"`,
+      type: "PROJECT_INVITE_ACCEPTED",
       priority: "medium",
+      includeOwner: true,
+      excludeUserId: userId,
     });
 
     res
@@ -573,12 +676,18 @@ export async function declineInvite(req, res) {
     // Delete the invitation
     await Invite.findByIdAndDelete(inviteId);
 
-    await createLog({
-      title: "Project Invitation Declined",
-      content: `User ID ${currentUserId} declined invitation ${inviteId} for project '${project.name}'`,
-      userCreated: currentUserId,
-      userAssigned: invite.invitedBy.toString(),
+    // Get the decliner's name
+    const decliner = await User.findById(currentUserId);
+    const declinerName = decliner?.name || "Someone";
+
+    // Notify the person who sent the invite
+    await notifyUsers({
+      userIds: [invite.invitedBy.toString()],
       projectId: project._id,
+      userCreated: currentUserId,
+      title: "Invitation Declined",
+      content: `${declinerName} declined the invitation to join "${project.displayName || project.name}"`,
+      type: "PROJECT_INVITE_DECLINED",
       priority: "low",
     });
 
