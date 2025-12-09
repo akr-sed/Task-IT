@@ -23,6 +23,7 @@ import Projects from "./pages/Projects";
 import TasksPage from "./pages/TasksPage";
 import Settings from "./pages/Settings";
 import NotificationsPage from "./pages/NotificationsPage";
+import Team from "./pages/Team";
 
 // Import project components
 import CreateProject from "./components/projects/CreateProject";
@@ -172,18 +173,7 @@ function App() {
               </div>
             }
           />
-          <Route
-            path="team"
-            element={
-              <div className="max-w-4xl mx-auto text-center py-20">
-                <div className="w-20 h-20 bg-gradient-to-br from-yellow-400 to-yellow-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                  <Users className="w-10 h-10 text-white" />
-                </div>
-                <h1 className="text-3xl font-bold text-gray-900 mb-2">Team</h1>
-                <p className="text-gray-600">Coming Soon! 👥</p>
-              </div>
-            }
-          />
+          <Route path="team" element={<Team />} />
           <Route path="settings" element={<Settings />} />
           <Route
             path="profile"
