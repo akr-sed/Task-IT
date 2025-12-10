@@ -197,7 +197,7 @@ const SignupForm = () => {
                         minLength={3}
                         maxLength={50}
                         className="border-2 border-[#D9D9D9] rounded-[15px] w-full h-[55px] pl-12 pr-4 focus:border-[#E31B54] focus:outline-none text-[#333333] transition-all hover:border-[#E31B54]/50"
-                        placeholder="John Doe"
+                        placeholder="Akram Seddik"
                       />
                     </div>
                   </div>

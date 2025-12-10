@@ -130,6 +130,8 @@ export async function editTask(req, res) {
       return res.status(400).json({ message: "No task data provided." });
     }
 
+    const oldDueDate = task.dueDate;
+
     // Update task fields with provided values
     // Update fields with new values
     Object.keys(editedTask).forEach((key) => {
@@ -146,8 +148,62 @@ export async function editTask(req, res) {
     const editor = await User.findById(req.userId);
     const editorName = editor?.name || "Someone";
 
-    // Only notify if there's an assigned user (who isn't the editor)
-    if (updatedTask.assignedTo && updatedTask.assignedTo.toString() !== req.userId.toString()) {
+    // 1. Notify for general assignment updates (existing logic)
+    // Only notify if there's an assigned user (who isn't the editor) and it wasn't a due date change (to avoid double notif if we want to separate them, but here we keep them independent)
+    // Actually, let's keep the existing check but maybe perform it separately?
+    // The existing logic sends "Task Updated".
+    
+    // 2. Check for Due Date Change
+    const newDueDate = updatedTask.dueDate;
+    const oldDateStr = oldDueDate ? new Date(oldDueDate).toISOString().split('T')[0] : null;
+    const newDateStr = newDueDate ? new Date(newDueDate).toISOString().split('T')[0] : null;
+
+    if (newDateStr !== oldDateStr && newDateStr) { // If date changed (and is not null)
+         const notificationTitle = oldDateStr ? "Task Due Date Updated" : "Task Due Date Added";
+         const formattedDate = new Date(newDueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+         const content = `${editorName} ${oldDateStr ? 'updated' : 'set'} due date for "${updatedTask.title}" to ${formattedDate}`;
+         
+         // Notify Assignee (if not editor)
+         if (updatedTask.assignedTo && updatedTask.assignedTo.toString() !== req.userId) {
+             await notifyUsers({
+                 userIds: [updatedTask.assignedTo],
+                 projectId: updatedTask.projectId,
+                 taskId: updatedTask._id,
+                 userCreated: req.userId,
+                 title: notificationTitle,
+                 content: content,
+                 type: "TASK_EDITED",
+                 priority: "high",
+                 excludeUserId: req.userId
+             });
+         }
+
+         // Notify Admins (if not editor)
+         await notifyProjectAdmins({
+             project,
+             projectId: updatedTask.projectId,
+             taskId: updatedTask._id,
+             userCreated: req.userId,
+             title: notificationTitle,
+             content: content,
+             type: "TASK_EDITED",
+             priority: "medium",
+             includeOwner: true,
+             excludeUserId: req.userId
+         });
+
+    } else if (updatedTask.assignedTo && updatedTask.assignedTo.toString() !== req.userId.toString()) {
+      // Logic for generic edit (e.g. description change) - fallback if NOT a due date change? 
+      // Or we can allow both. The existing code sent "Task Updated". 
+      // If we just changed Due Date, we sent the specific one above. 
+      // If we changed OTHER things, we might want this one.
+      // To prevent duplicate spam if only Due Date changed, we can check if that was the only major change?
+      // For simplicity, let's leave this as is, but maybe wrap it in an else or check if we didn't just send a notif.
+      // But user might change Description AND Due Date.
+      
+      // Let's keep it simple: If Due Date changed, we sent a Specific Notification. 
+      // If NOT, we send the Generic one.
+      
       await notifyUsers({
         userIds: [updatedTask.assignedTo],
         projectId: updatedTask.projectId,

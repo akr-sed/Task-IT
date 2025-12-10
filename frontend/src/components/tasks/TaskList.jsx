@@ -688,6 +688,7 @@ const CreateTaskModal = ({
 }) => {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
+  const [dueDate, setDueDate] = useState("");
   const [activity, setActivity] = useState({
     value: "BACKEND",
     label: "🔧 Backend",
@@ -785,6 +786,7 @@ const CreateTaskModal = ({
         priority: priority.value,
         status: "todo",
         assignedTo: assignedTo ? assignedTo.value : null,
+        dueDate: dueDate || null,
       });
       onTaskCreated(resp.data.task || resp.data);
     } catch (err) {
@@ -893,34 +895,49 @@ const CreateTaskModal = ({
             </div>
           </div>
 
-          {/* Assign To */}
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Assign To
-            </label>
-            <Select
-              value={assignedTo}
-              onChange={setAssignedTo}
-              options={memberOptions()}
-              styles={selectStyles}
-              isClearable
-              placeholder="Select a team member..."
-            />
-            {assignedTo && membersMap[assignedTo.value] && (
-              <div className="mt-3 flex items-center gap-2 p-2 bg-gray-50 rounded-xl w-fit">
-                <div
-                  className={`w-8 h-8 rounded-full bg-gradient-to-br ${getRandomColor(
-                    assignedTo.value
-                  )} flex items-center justify-center text-white text-xs font-bold`}
-                >
-                  {getInitials(membersMap[assignedTo.value].name)}
-                </div>
-                <span className="text-sm font-medium text-gray-700">
-                  {membersMap[assignedTo.value].name}
-                </span>
-              </div>
-            )}
+          {/* Due Date & Assign To */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Due Date
+              </label>
+              <input
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
+                className="w-full h-[48px] px-4 border-2 border-gray-200 rounded-xl focus:border-[#E31B54] focus:outline-none transition-colors"
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Assign To
+              </label>
+              <Select
+                value={assignedTo}
+                onChange={setAssignedTo}
+                options={memberOptions()}
+                styles={selectStyles}
+                isClearable
+                placeholder="Select a team member..."
+              />
+            </div>
           </div>
+
+          {assignedTo && membersMap[assignedTo.value] && (
+            <div className="flex items-center gap-2 p-2 bg-gray-50 rounded-xl w-fit">
+              <div
+                className={`w-8 h-8 rounded-full bg-gradient-to-br ${getRandomColor(
+                  assignedTo.value
+                )} flex items-center justify-center text-white text-xs font-bold`}
+              >
+                {getInitials(membersMap[assignedTo.value].name)}
+              </div>
+              <span className="text-sm font-medium text-gray-700">
+                {membersMap[assignedTo.value].name}
+              </span>
+            </div>
+          )}
 
           {/* Action Buttons */}
           <div className="flex gap-3 pt-4">
