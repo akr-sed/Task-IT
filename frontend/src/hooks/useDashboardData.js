@@ -70,14 +70,22 @@ export const useDashboardData = () => {
       }
       setInvitesLoading(false);
 
-      // ✅ BATCH FETCH TASKS - Get all tasks at once
+      // ✅ BATCH FETCH TASKS - Get all tasks from relevant projects for the dashboard metrics & calendar
       if (projectsData.length > 0) {
-        // Fetch all tasks for the authenticated user (assigned or owned)
-        const tasksResponse = await taskService.getMyTasks()
+        // We used to fetch only 'my tasks'. To support the "All Tasks" view in CalendarCard,
+        // we need to fetch tasks for all projects w.r.t permissions.
+        
+        // Parallel fetch for all projects
+        const tasksPromises = projectsData.map(p => taskService.getTasksByProject(p._id));
+        const tasksResponses = await Promise.all(tasksPromises);
+        
+        const allTasks = tasksResponses.flatMap((r, i) => {
+            const tasks = r.data.tasks || [];
+            // Attach project reference to each task for filtering later
+            return tasks.map(t => ({ ...t, project: projectsData[i] }));
+        });
 
-        const userTasks = tasksResponse.data.tasks || [];
-
-        setTasks(userTasks);
+        setTasks(allTasks);
 
         // ✅ BATCH FETCH MEMBERS - Collect unique IDs first, then fetch once
         const uniqueMemberIds = new Set();
