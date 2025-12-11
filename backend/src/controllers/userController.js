@@ -128,29 +128,43 @@ export const verifyEmail = async (req, res, next) => {
 // Resend verification code controller
 export const resendVerificationCode = async (req, res) => {
   try {
-    const { tempUserId } = req.body;
+    const { email } = req.body;
 
-    if (!tempUserId) {
-      return res.status(400).json({ message: "Please provide tempUserId" });
+    if (!email) {
+      return res.status(400).json({ message: "Please provide email" });
     }
 
-    // Find temp user
-    const tempUser = await TempUser.findById(tempUserId);
+    // Find temp user by email
+    const tempUser = await TempUser.findOne({ email });
     if (!tempUser) {
-      return res.status(400).json({
-        message: "User registration has expired. Please sign up again.",
+      // Generic response to prevent email enumeration
+      return res.status(200).json({
+        message: "If that email is registered, a verification code has been sent.",
+      });
+    }
+
+    // Check if code was sent recently (spam prevention - 60 second cooldown)
+    const recentCode = await Code.findOne({
+      userId: tempUser._id,
+      type: "register",
+      createdAt: { $gt: new Date(Date.now() - 60000) }, // Within last 60 seconds
+    });
+
+    if (recentCode) {
+      return res.status(429).json({
+        message: "Please wait 60 seconds before requesting another code.",
       });
     }
 
     // Delete old verification code if exists
-    await Code.deleteMany({ userId: tempUserId, type: "register" });
+    await Code.deleteMany({ userId: tempUser._id, type: "register" });
 
     // Generate new verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
     // Save new verification code
     const code = new Code({
-      userId: tempUserId,
+      userId: tempUser._id,
       code: verificationCode,
       type: "register",
     });
@@ -164,8 +178,9 @@ export const resendVerificationCode = async (req, res) => {
       tempUser.name
     );
 
+    // Generic response to prevent email enumeration
     res.status(200).json({
-      message: "Verification code has been resent to your email",
+      message: "If that email is registered, a verification code has been sent.",
     });
   } catch (error) {
     console.error("Resend code error:", error);

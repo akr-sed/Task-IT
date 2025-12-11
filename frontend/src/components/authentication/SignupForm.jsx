@@ -82,7 +82,7 @@ const SignupForm = () => {
               {/* Action Buttons */}
               <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
                 <button
-                  onClick={() => navigate(`/verify?id=${tempUserId}`)}
+                  onClick={() => navigate(`/verify?id=${tempUserId}&email=${encodeURIComponent(formData.email)}`)}
                   className='px-8 py-4 bg-gradient-to-r from-[#E31B54] to-[#E91E63] text-white font-semibold rounded-full hover:shadow-xl hover:scale-105 transition-all text-lg'
                 >
                   Verify Now →

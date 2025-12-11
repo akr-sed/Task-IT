@@ -17,12 +17,13 @@ const VerificationForm = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const tempUserId = new URLSearchParams(location.search).get("id");
+  const email = new URLSearchParams(location.search).get("email");
 
   useEffect(() => {
-    if (!tempUserId) {
+    if (!tempUserId || !email) {
       navigate("/signup");
     }
-  }, [tempUserId, navigate]);
+  }, [tempUserId, email, navigate]);
 
   // Countdown timer for resend
   useEffect(() => {
@@ -118,7 +119,7 @@ const VerificationForm = () => {
     setError("");
 
     try {
-      await authService.resendVerificationCode(tempUserId);
+      await authService.resendVerificationCode(email);
       setResendSuccess(true);
       setCountdown(60);
       setCanResend(false);
