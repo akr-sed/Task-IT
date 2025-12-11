@@ -307,6 +307,10 @@ export const setNewPassword = async (req, res, next) => {
     }
 
     user.passwordHash = newPassword;
+    // Clear reset token after successful password reset
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    user.lastPasswordResetAt = new Date();
     await user.save();
 
     //passing the user information to the next middleware (tokenGenerator)
