@@ -1,3 +1,4 @@
+import env from "./config/env.js"; // Validate environment variables first
 import express from "express";
 import cors from "cors";
 import { createServer } from "http";
@@ -28,12 +29,12 @@ initializeSocket(httpServer);
 
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL,
+    origin: env.FRONTEND_URL,
     credentials: true,
   })
 );
 
-const PORT = process.env.PORT || 5000;
+const PORT = env.PORT;
 
 app.use(express.json());
 app.use(generalLimiter);
@@ -44,7 +45,7 @@ app.use("/api/logs", logRouter);
 app.use("/api/notifications", notificationRouter);
 
 connectDB().then(() => {
-  const mongoUsername = extractMongoUsername(process.env.MONGODB_URI);
+  const mongoUsername = extractMongoUsername(env.MONGODB_URI);
   console.log(`Connected to MongoDB as user: ${mongoUsername}`);
   httpServer.listen(PORT, () => {
     console.log(`Server started at port ${PORT}`);
