@@ -45,9 +45,7 @@ const userSchema = new mongoose.Schema(
 
 // Hash before saving
 userSchema.pre("save", async function (next) {
-  // Skip on creation
-  if (this.isNew) return next();
-
+  // Hash password if it was modified (includes new users)
   if (!this.isModified("passwordHash")) return next();
 
   try {
