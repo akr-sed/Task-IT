@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Use an explicit test target (e.g. npm run test:rateLimiter)\" && exit 1",
+    "test:rateLimiter": "node tests/rateLimiter.test.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -33,6 +34,7 @@
   },
   "devDependencies": {
     "nodemon": "^3.1.10",
+    "socket.io-client": "^4.8.1",
     "supertest": "^7.1.4"
   }
 }

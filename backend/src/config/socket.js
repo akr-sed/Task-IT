@@ -1,9 +1,75 @@
 import { Server } from "socket.io";
 
 let io = null;
+let cleanupTimer = null;
 
-// Map to track connected users: { odlkfj: 'socket-id', ... }
-const connectedUsers = new Map();
+// Bidirectional tracking for safer cleanup
+const connectedUsers = new Map(); // userId -> Set<socketId>
+const socketToUser = new Map();   // socketId -> userId
+
+const registerSocket = (userId, socket) => {
+  if (!userId) return;
+  if (!connectedUsers.has(userId)) {
+    connectedUsers.set(userId, new Set());
+  }
+  connectedUsers.get(userId).add(socket.id);
+  socketToUser.set(socket.id, userId);
+  socket.join(`user:${userId}`);
+};
+
+const removeSocket = (socketId) => {
+  const userId = socketToUser.get(socketId);
+  if (!userId) return;
+
+  socketToUser.delete(socketId);
+  const sockets = connectedUsers.get(userId);
+  if (sockets) {
+    sockets.delete(socketId);
+    if (sockets.size === 0) {
+      connectedUsers.delete(userId);
+    }
+  }
+};
+
+export const performCleanup = () => {
+  // If Socket.IO is gone, drop all mappings
+  if (!io || !io.sockets) {
+    connectedUsers.clear();
+    socketToUser.clear();
+    return;
+  }
+
+  const liveSockets = io.sockets.sockets;
+
+  for (const [socketId, userId] of socketToUser.entries()) {
+    const socketInstance = liveSockets.get(socketId);
+    const isGone = !socketInstance || socketInstance.disconnected;
+
+    if (isGone) {
+      socketToUser.delete(socketId);
+      const sockets = connectedUsers.get(userId);
+      if (sockets) {
+        sockets.delete(socketId);
+        if (sockets.size === 0) {
+          connectedUsers.delete(userId);
+        }
+      }
+    }
+  }
+};
+
+export const shutdownSocket = () => {
+  if (cleanupTimer) {
+    clearInterval(cleanupTimer);
+    cleanupTimer = null;
+  }
+  if (io) {
+    io.close();
+    io = null;
+  }
+  connectedUsers.clear();
+  socketToUser.clear();
+};
 
 /**
  * Initialize Socket.IO server
@@ -11,6 +77,8 @@ const connectedUsers = new Map();
  * @returns {Server} Socket.IO server instance
  */
 export function initializeSocket(server) {
+  if (io) return io;
+
   io = new Server(server, {
     cors: {
       origin: process.env.FRONTEND_URL,
@@ -18,30 +86,21 @@ export function initializeSocket(server) {
     },
   });
 
+  // Periodic cleanup to avoid lingering sockets
+  cleanupTimer = setInterval(performCleanup, 5 * 60 * 1000);
+
   io.on("connection", (socket) => {
     console.log(`[Socket.IO] Client connected: ${socket.id}`);
 
     // User joins with their user ID
     socket.on("user:join", (userId) => {
-      if (userId) {
-        // Store the user's socket ID
-        connectedUsers.set(userId, socket.id);
-        // Join a room named after the user ID for targeted notifications
-        socket.join(`user:${userId}`);
-        console.log(`[Socket.IO] User ${userId} joined (socket: ${socket.id})`);
-      }
+      registerSocket(userId, socket);
+      console.log(`[Socket.IO] User ${userId} joined (socket: ${socket.id})`);
     });
 
     // Handle disconnection
     socket.on("disconnect", () => {
-      // Find and remove the user from connectedUsers
-      for (const [userId, socketId] of connectedUsers.entries()) {
-        if (socketId === socket.id) {
-          connectedUsers.delete(userId);
-          console.log(`[Socket.IO] User ${userId} disconnected`);
-          break;
-        }
-      }
+      removeSocket(socket.id);
       console.log(`[Socket.IO] Client disconnected: ${socket.id}`);
     });
   });
@@ -56,6 +115,17 @@ export function initializeSocket(server) {
  */
 export function getIO() {
   return io;
+}
+
+// Expose state for tests/diagnostics
+export function getConnectionState() {
+  return {
+    users: Array.from(connectedUsers.entries()).map(([userId, sockets]) => ({
+      userId,
+      sockets: Array.from(sockets),
+    })),
+    socketCount: socketToUser.size,
+  };
 }
 
 /**

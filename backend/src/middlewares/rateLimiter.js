@@ -1,145 +1,99 @@
 import rateLimit from "express-rate-limit";
 
+// Compute a sane retry-after value even if resetTime is missing
+const getRetryAfterSeconds = (req, fallbackSeconds) => {
+  const resetTime = req.rateLimit?.resetTime;
+  if (resetTime instanceof Date) {
+    const diffMs = resetTime.getTime() - Date.now();
+    return Math.max(1, Math.ceil(diffMs / 1000));
+  }
+
+  const windowMs = req.rateLimit?.windowMs;
+  if (typeof windowMs === "number") {
+    return Math.max(1, Math.ceil(windowMs / 1000));
+  }
+
+  return fallbackSeconds;
+};
+
+const buildLimiter = ({ windowMs, max, message, fallbackSeconds }) =>
+  rateLimit({
+    windowMs,
+    max,
+    message: { message },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skipSuccessfulRequests: false,
+    handler: (req, res) => {
+      const retryAfter = getRetryAfterSeconds(req, fallbackSeconds);
+
+      res.status(429).json({
+        message,
+        retryAfter,
+      });
+    },
+  });
+
 // Login rate limiter - 5 attempts per 15 minutes
-export const loginLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per windowMs
-  message: {
-    message: "Too many login attempts from this IP, please try again after 15 minutes",
-  },
-  standardHeaders: true, // Return rate limit info in `RateLimit-*` headers
-  legacyHeaders: false, // Disable `X-RateLimit-*` headers
-  skipSuccessfulRequests: false, // Count successful requests
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many login attempts. Please try again after 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const loginLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Too many login attempts. Please try again after 15 minutes.",
+  fallbackSeconds: 15 * 60,
 });
 
 // Signup rate limiter - 3 signups per hour
-export const signupLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 requests per windowMs
-  message: {
-    message: "Too many accounts created from this IP, please try again after an hour",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many signup attempts. Please try again after 1 hour.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const signupLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: "Too many signup attempts. Please try again after 1 hour.",
+  fallbackSeconds: 60 * 60,
 });
 
 // Password reset request limiter - 3 requests per hour
-export const passwordResetRequestLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 requests per windowMs
-  message: {
-    message: "Too many password reset requests from this IP, please try again after an hour",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many password reset requests. Please try again after 1 hour.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const passwordResetRequestLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: "Too many password reset requests. Please try again after 1 hour.",
+  fallbackSeconds: 60 * 60,
 });
 
 // Password reset verification limiter - 5 attempts per 15 minutes
-export const passwordResetVerifyLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // 5 requests per windowMs
-  message: {
-    message: "Too many reset code verification attempts from this IP, please try again after 15 minutes",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many verification attempts. Please try again after 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const passwordResetVerifyLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: "Too many verification attempts. Please try again after 15 minutes.",
+  fallbackSeconds: 15 * 60,
 });
 
 // Email verification limiter - 10 attempts per hour
-export const emailVerificationLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10, // 10 requests per windowMs
-  message: {
-    message: "Too many verification attempts from this IP, please try again after an hour",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many verification attempts. Please try again after 1 hour.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const emailVerificationLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 10,
+  message: "Too many verification attempts. Please try again after 1 hour.",
+  fallbackSeconds: 60 * 60,
 });
 
 // General API limiter - 100 requests per 15 minutes (for general protection)
-export const generalLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // 100 requests per windowMs
-  message: {
-    message: "Too many requests from this IP, please try again after 15 minutes",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many requests. Please slow down and try again after 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const generalLimiter = buildLimiter({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  message: "Too many requests. Please slow down and try again after 15 minutes.",
+  fallbackSeconds: 15 * 60,
 });
 
 // Password change limiter - 3 changes per hour (for authenticated users)
-export const passwordChangeLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // 3 requests per windowMs
-  message: {
-    message: "Too many password change attempts, please try again after an hour",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many password change attempts. Please try again after 1 hour.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const passwordChangeLimiter = buildLimiter({
+  windowMs: 60 * 60 * 1000,
+  max: 3,
+  message: "Too many password change attempts. Please try again after 1 hour.",
+  fallbackSeconds: 60 * 60,
 });
 
 // Email change limiter - 3 changes per day
-export const emailChangeLimiter = rateLimit({
-  windowMs: 24 * 60 * 60 * 1000, // 24 hours
-  max: 3, // 3 requests per day
-  message: {
-    message: "Too many email change requests, please try again tomorrow",
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: false,
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many email change requests. Please try again after 24 hours.",
-      retryAfter: Math.ceil(req.rateLimit.resetTime / 1000),
-    });
-  },
+export const emailChangeLimiter = buildLimiter({
+  windowMs: 24 * 60 * 60 * 1000,
+  max: 3,
+  message: "Too many email change requests. Please try again after 24 hours.",
+  fallbackSeconds: 24 * 60 * 60,
 });
