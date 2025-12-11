@@ -455,7 +455,15 @@ export async function listTasksOfProject(req, res) {
       return res
         .status(403)
         .json({ message: "you are not a member of this project" });
-    const tasks = await Task.find({ projectId: projectId });
+    
+    // Optimize query with index hint, field projection (including comments), sorting, and lean()
+    const tasks = await Task.find({ projectId: projectId })
+      .hint('task_project_status_idx') // Use compound index for faster lookup
+      .select('title description status priority dueDate assignedTo projectId comments createdAt updatedAt')
+      .sort({ createdAt: -1 }) // Newest first
+      .lean() // Returns plain JS objects (faster, no Mongoose overhead)
+      .exec(); // Explicit execution
+    
     return res.status(200).json({ tasks: tasks });
   } catch (error) {
     return res
@@ -468,8 +476,13 @@ export async function listTasksOfProject(req, res) {
 export async function listTasks(req, res) {
   try {
     const userId = req.userId;
-    // fetch all the tasks that are assigned to the user
-    const tasks = await Task.find({ assignedTo: userId });
+    // Optimize query with correct index, field projection, and lean()
+    const tasks = await Task.find({ assignedTo: userId })
+      .hint('task_assignee_idx') // Use single-field index for faster lookup
+      .select('title description status priority dueDate assignedTo projectId createdAt updatedAt')
+      .lean() // Returns plain JS objects (faster, no Mongoose overhead)
+      .exec(); // Explicit execution
+    
     return res.status(200).json({ tasks: tasks });
   } catch (error) {
     return res

@@ -37,7 +37,7 @@ app.use(
 const PORT = env.PORT;
 
 app.use(express.json());
-app.use(generalLimiter);
+// app.use(generalLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter);

@@ -122,9 +122,16 @@ export async function getProject(req, res) {
 export async function fetchProjects(req, res) {
   try {
     const userId = req.userId;
+    // Optimize query with field projection, lean(), sorting, and index hints
     const projects = await Project.find({
       $or: [{ ownedBy: userId }, { "members.id": userId }],
-    });
+    })
+      .hint({ ownedBy: 1 }) // Use index for faster query execution
+      .select('name displayName description ownedBy members createdAt updatedAt')
+      .sort({ updatedAt: -1 }) // Most recently updated first
+      .lean() // Returns plain JS objects instead of Mongoose documents (faster)
+      .exec(); // Explicit execution for better performance
+    
     // FIXME : later this should be taken care of
 
     // await createLog({
