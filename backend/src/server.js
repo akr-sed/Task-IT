@@ -5,6 +5,7 @@ import { connectDB } from "./config/db.js";
 import { initializeSocket } from "./config/socket.js";
 import authRouter from "./routes/authRoutes.js";
 import generalCheck from "./middlewares/generalCheck.js";
+import { generalLimiter } from "./middlewares/rateLimiter.js";
 import projectRouter from "./routes/projectRoutes.js";
 import taskRouter from "./routes/taskRoutes.js";
 import logRouter from "./routes/logRoutes.js";
@@ -35,6 +36,7 @@ app.use(
 const PORT = process.env.PORT || 5000;
 
 app.use(express.json());
+app.use(generalLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter);

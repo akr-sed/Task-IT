@@ -99,7 +99,7 @@ export const generalLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful requests for general limiter
+  skipSuccessfulRequests: false,
   handler: (req, res) => {
     res.status(429).json({
       message: "Too many requests. Please slow down and try again after 15 minutes.",
