@@ -48,6 +48,10 @@ const tokenSchema = new mongoose.Schema(
   }
 );
 
+// Quick lookups
+tokenSchema.index({ userId: 1 }, { name: "session_user_idx" });
+tokenSchema.index({ token: 1 }, { name: "session_token_idx", unique: true, sparse: true });
+
 // Hash before saving
 tokenSchema.pre("save", async function (next) {
   const payload = { userId: this.userId };

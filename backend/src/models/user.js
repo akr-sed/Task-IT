@@ -47,6 +47,9 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Quick lookups for reset flows
+userSchema.index({ resetToken: 1 }, { name: "user_reset_token_idx", sparse: true });
+
 // Hash before saving
 userSchema.pre("save", async function (next) {
   // Hash password if it was modified (includes new users)
