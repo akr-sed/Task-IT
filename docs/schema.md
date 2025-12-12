@@ -145,3 +145,49 @@ createdAt.      | date.     | the date when this notification was created.
 **indexes:**
 - notification_dedup_index : compound index on userAssigned , type , taskId , projectId , createdAtt. it is used to prevent duplicate notifications.
 
+
+## codes collections.
+----> temporary verification codes for signup, password, reset,ect. " auto-deletes after ten minutes". <----
+
+Fields.    | Type.     | Descriptions.
+_id.       | ObjectId. | unique.
+userId.    | string.   | reference to the user this code belongs to.
+code.      | number.   | verfication code, required. 
+type.      | string.   | purpose: password , register , delete , email.
+createdAt. | date.     | the date when this record was created, auto-expires after 10 mins.
+note.      | string.   | optinal extra info.
+
+**validations:**
+- code is required.
+- type can only be password, register, delete or email.
+
+**strict mode:**
+- ON, unknown fields will throw an error.
+
+**notes:**
+- codes are temporary and auto-deleted after ten minutes.
+- it is used for secure user verification flows.
+
+
+## invites collections.
+----> stores pending project invitations "auto-deletes after 30 dsay". <----
+
+Fields.        | Type.     | Descriptions.
+_id.           | ObjectId. | unique. 
+projectId.     | ObjectId. | reference to the project, required.
+invitedUserId. | ObjectId. | reference to the invited user " if he has an account". 
+invitedEmail.  | string.   | email of the invited person " if he hasnt an account yet" .
+invitedBy.     | ObjectId. | reference to the user who sent the invite, required.
+inviteCode.    | string.   | unique code to accept the invitation, requried.
+createdAt.     | date.     | the date when this record was created, auto-expires after 30 days.
+
+**validation:**
+- projectId , invitedBy , inviteCode are required.
+- either invitedUswerId or invitedEmail must be provided.
+**strict mode:**
+- ON, unknown filds will throw an error.
+
+**notes:**
+- supports inviting existing users or new users by email.
+- invites expire after 30 days if not accepted.
+
