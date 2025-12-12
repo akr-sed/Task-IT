@@ -53,3 +53,50 @@ createdAt.   | date.     | date when the record was created.
 **notes:**
 - members: { id : ObjectId , role: 'admin' | 'member'}.
 - owner is not included in members so check both for permissions.
+
+
+## Tasks collection.
+----> stores tasks linked to projects with status, priority, and comments. <----
+
+**priority:** low / medium / high (medium is default)
+
+Fields.      | Type.     | Descriptions.
+_id.         | ObjectId. | unique.
+projectId.   | ObjectId. | required as refs.
+activity.    | string.   | activity label for the task.
+title.       | string.   | task title, required.
+description. | string.   | details about the task.
+assignedTo.  | ObjectId. | reference to the user assigned to this task.
+status.      | string.   | current state.
+priority.    | string.   | task priority.
+dueDate.     | date.     | deadline for the task.
+createdAt.   | date.     | the date when created.
+comments.    | array.    | list of comments on the task.
+
+**notes:**
+- every task belongs to one project.
+- task can be assigned to one user or no one.
+- here the comments are embedded inside the tasks.
+    **why embedded?**
+      - always loaded with tasks, avoid extra queries.
+      - tasks won t have thousands of comments, so document size is fine.
+- you can t search comments across tasks.
+- no editing, you can only delete and repost instead.
+-comments: [{
+  _id: ObjectId,
+  authorId: ObjectId,  // user ref
+  text: String,
+  createdAt: Date
+}].
+
+**status cases:**
+- todo."default".
+- in progress.
+- done.
+- to review.
+
+**priority cases:** 
+- low.
+- medium."default".
+- high.
+
