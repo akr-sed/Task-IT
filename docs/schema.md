@@ -100,3 +100,48 @@ comments.    | array.    | list of comments on the task.
 - medium."default".
 - high.
 
+
+## logs collection.
+----> stores notifications and acitivity logs for users. <----
+
+Fields.         | Type.     | Descriptions.
+_id.            | ObjectId. | unique.
+title.          | string.   | required.
+content.        | string.   | required.
+type.           | string.   | notification category, see types below. default: genereal.
+userAssigned.   | ObjectId. | reference to the user receiving  the notification.
+userCreated.    | ObjectId. | reference to the user who triggered the notification.
+projectId.      | ObjectId. | reference to the related project. 
+taskId.         | ObjectId. | reference to the related task.
+prioriy.        | string.   | with different values.
+isRead.         | boolean.  | wether the notification has been read, its default value is false.
+link.           | string.   | url for navigation based on type and context.
+createdAt.      | date.     | the date when this notification was created.
+
+**task stuffs:**
+
+- task_created.
+- task_assigned.
+- task_status_changed.
+- task_ edited.
+- task_deleted. 
+- task_comment.
+
+**project stuffs:**
+- project_invite_sent.
+- project_invite_accepted.
+- project_invite_declined.
+- project_member_removed.
+- project_role_updated.
+- project_ownership_transferred.
+- project_edited.
+- project_deleted.
+
+**notes:**
+
+- just using isRead boolean (default false). we dont track delivered vs sent vs whatever - if its in the db its delivered. isRead is for the unread badge in UI.
+- link is computed based on type , projectId and taskeId.
+
+**indexes:**
+- notification_dedup_index : compound index on userAssigned , type , taskId , projectId , createdAtt. it is used to prevent duplicate notifications.
+
