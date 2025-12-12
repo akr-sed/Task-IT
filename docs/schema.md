@@ -191,3 +191,29 @@ createdAt.     | date.     | the date when this record was created, auto-expires
 - supports inviting existing users or new users by email.
 - invites expire after 30 days if not accepted.
 
+
+## tempusers collection.
+----> contains unverified signups until email verification "auto-deletes after ten mins". <----
+Fields.       | Type.     | Descriptions.
+_id.          | ObjectId. | unique.
+name.         | string.   | required.
+email.        | string.   | required, unique.
+passwordHash. | string.   | hashed password, auto-hashed on save, required.
+createdAt.    | date.     | the date when this record was created.
+
+**indexes:**
+- email: prevents duplicate signups.
+
+**validations:**
+- name : required, 3 - 50 chars.
+- email : required, must match the email format.
+- passwordHash : required.
+
+**strict mode:**
+- ON, unknown fields will throw an error.
+
+**notes:**
+- password is hashed automatically before saving.
+- temporary storage for unverified signups.
+- auto-delete after ten minutes if not verified.
+
