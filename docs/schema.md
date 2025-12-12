@@ -27,3 +27,29 @@ createdAt.        | date.    | when the record was created.
 - strict mode: only defined fields are allowed. unknown fields will cause an error.
 
 
+## Projects collection.
+----> stores projects with owner, members, and roles. <----
+
+Fields.      | Type.     | Descriptions.
+_id.         | ObjectId. | unique.
+name.        | string.   | unique.
+displayName  | string.   | human-readable name for the display purposes.
+description. | string.   | brief summary of the record.
+ownedBy.     | ObjectId. | reference to the user who owns this record.
+createdBy.   | ObjectId. | reference to the user who created this record.
+members.     | array.    | list of associated user or items.
+createdAt.   | date.     | date when the record was created.
+
+
+**refs:**
+- here in this case the ownedBy points to users.
+- here in this case the createBy points to users.
+- members[].id points to users
+
+
+**indexes:** name: prevents duplicate project names, faster lookups.
+
+
+**notes:**
+- members: { id : ObjectId , role: 'admin' | 'member'}.
+- owner is not included in members so check both for permissions.
