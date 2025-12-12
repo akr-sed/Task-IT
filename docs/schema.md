@@ -217,3 +217,31 @@ createdAt.    | date.     | the date when this record was created.
 - temporary storage for unverified signups.
 - auto-delete after ten minutes if not verified.
 
+## sessions collection.
+----> tracks active login sessions per device. <----
+
+Fields.      | Type.     | Descriptions.
+_id.         | ObjectId. | unique.
+userId.      | string.   | reference to the logged-in user, required.
+device.      | Object.   | device information.
+   deviceId.        | string. | unique , required.
+   deviceName.      | string. | name by default"unknown".
+   deviceOsVersion. | string. | os version , required.
+ip.          | string.   | user s IP address.
+token.       | string.   | JWT token for authentification.
+createdAt.   | date.     | when the session was created, auto-expires after 30 day.
+lastUpdated. | date.     | when the session was last used.
+
+**validations:**
+- userId : required.
+- device.deviceId , device.deviceOsVersion both are required.
+
+**strict mode:**
+- ON, unknown fields will throw an error.
+
+**notes:**
+- JWT token auto-generated if not provided.
+- Allows multiple sessions per user " different devices are used in this case" .
+- very useful for the feature of log out from all devices.
+
+
