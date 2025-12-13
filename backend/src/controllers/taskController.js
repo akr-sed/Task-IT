@@ -69,7 +69,8 @@ export async function createTask(req, res) {
     const savedTask = await newTask.save();
 
     // Get project for notification targeting
-    const project = await Project.findById(projectId);
+    // Get project for notification targeting
+    const project = req.project;
     
     // Get the name of the user who created the task
     const creator = await User.findById(req.userId);
@@ -144,7 +145,8 @@ export async function editTask(req, res) {
     const updatedTask = await task.save();
 
     // Get project and editor info for notifications
-    const project = await Project.findById(updatedTask.projectId);
+    // Get project and editor info for notifications
+    const project = req.project;
     const editor = await User.findById(req.userId);
     const editorName = editor?.name || "Someone";
 
@@ -626,6 +628,39 @@ export async function getComments(req, res) {
     }
 }
 
+// list all tasks for all projects the user belongs to
+export async function listAllProjectsTasks(req, res) {
+  try {
+    const userId = req.userId;
+
+    // Find all projects where the user is an owner or a member
+    const projects = await Project.find({
+      $or: [
+        { ownedBy: userId },
+        { "members.id": userId }
+      ]
+    }).select('_id');
+
+    if (projects.length === 0) {
+      return res.status(200).json({ tasks: [] });
+    }
+
+    const projectIds = projects.map(p => p._id);
+
+    // Fetch tasks for these projects
+    const tasks = await Task.find({ projectId: { $in: projectIds } })
+      .select('title description status priority dueDate assignedTo projectId comments createdAt updatedAt')
+      .sort({ dueDate: 1 }) // Sort by due date for calendar/dashboard
+      .lean()
+      .exec();
+
+    return res.status(200).json({ tasks });
+  } catch (error) {
+    console.error("Error in listAllProjectsTasks:", error);
+    return res.status(500).json({ message: "Error fetching all project tasks", error: error.message });
+  }
+}
+
 /* ──────────────────────────────────────────────
    Export as grouped object
 ────────────────────────────────────────────── */
@@ -637,6 +672,7 @@ export default {
   updateTaskStatus,
   listTasksOfProject,
   listTasks,
-    comment,
-    deleteComment
+  listAllProjectsTasks, // Export new function
+  comment,
+  deleteComment
 };

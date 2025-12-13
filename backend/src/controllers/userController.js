@@ -19,7 +19,7 @@ import Invite from "../models/invite.js"
 export const userRegistration = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-    console.log(email) 
+
     if (!name || !email || !password) {
       return res
         .status(400)
@@ -77,7 +77,11 @@ export const verifyEmail = async (req, res, next) => {
         .status(400)
         .json({ message: "Please provide tempUserId and verification code" });
     }
-    console.log("inside the controller at backend")
+    if (!tempUserId || !verificationCode) {
+      return res
+        .status(400)
+        .json({ message: "Please provide tempUserId and verification code" });
+    }
     // Find the verification code
     const codeRecord = await Code.findOne({
       userId: tempUserId,

@@ -13,7 +13,11 @@ export default async function authService(req, res, next) {
     }
 
     // Verify token
-    const secretKey = process.env.SECRET || "temporary";
+    const secretKey = process.env.SECRET;
+    if (!secretKey) {
+        console.error("FATAL: SECRET environment variable is not defined");
+        return res.status(500).json({ error: "Server configuration error" });
+    }
     const decoded = jwt.verify(token, secretKey);
 
 

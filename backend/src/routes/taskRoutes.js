@@ -9,6 +9,7 @@ import {
   fetchTask,
   listTasks,
   updateTaskStatus,
+  listAllProjectsTasks, // Import new function
   comment,
   deleteComment,
   getComments
@@ -25,6 +26,9 @@ const taskRouter = express.Router();
 /* ───────────────────────────────
    Task Routes
 ─────────────────────────────── */
+
+//  List all tasks in all projects user belongs to
+taskRouter.get("/all-projects", authService, listAllProjectsTasks);
 
 //  Create a new task
 taskRouter.post("/", bodyCheck, authService, permissionCheck, createTask);
