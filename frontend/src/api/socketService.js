@@ -19,7 +19,7 @@ const localListeners = {
  */
 export function emitLocal(event, data) {
   if (localListeners[event]) {
-    localListeners[event].forEach(callback => callback(data));
+    localListeners[event].forEach((callback) => callback(data));
   }
 }
 
@@ -34,9 +34,11 @@ export function onLocal(event, callback) {
     localListeners[event] = [];
   }
   localListeners[event].push(callback);
-  
+
   return () => {
-    localListeners[event] = localListeners[event].filter(cb => cb !== callback);
+    localListeners[event] = localListeners[event].filter(
+      (cb) => cb !== callback
+    );
   };
 }
 
@@ -50,7 +52,8 @@ export function initializeSocket() {
   }
 
   socket = io(SOCKET_URL, {
-    withCredentials : true,
+    transports: ["websocket"],
+    withCredentials: true,
     autoConnect: false,
     reconnection: true,
     reconnectionAttempts: 5,
@@ -59,7 +62,7 @@ export function initializeSocket() {
 
   socket.on("connect", () => {
     console.log("[Socket.IO] Connected:", socket.id);
-    
+
     // Join the user's room
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.id) {
@@ -85,17 +88,17 @@ export function connectSocket() {
   if (!socket) {
     initializeSocket();
   }
-  
+
   if (!socket.connected) {
     socket.connect();
-    
+
     // Re-join user room after reconnection
     const user = JSON.parse(localStorage.getItem("user"));
     if (user?.id) {
       socket.emit("user:join", user.id);
     }
   }
-  
+
   return socket;
 }
 
@@ -125,9 +128,9 @@ export function onNotification(callback) {
   if (!socket) {
     initializeSocket();
   }
-  
+
   socket.on("notification:new", callback);
-  
+
   // Return unsubscribe function
   return () => {
     socket.off("notification:new", callback);
