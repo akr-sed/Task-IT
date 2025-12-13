@@ -48,8 +48,6 @@ export async function getMyNotifications(req, res) {
       unreadCount: unreadTotal,
     };
 
-    console.log('Sending response with', notifications.length, 'notifications');
-    console.log('=== END /api/notifications/me ===\n');
     
     return res.status(200).json(response);
   } catch (error) {
@@ -68,9 +66,9 @@ export async function getMyNotifications(req, res) {
 // Get count of unread notifications
 export async function getUnreadCount(req, res) {
   try {
-    console.log('=== GET /api/notifications/me/unread-count ===');
+
     const userId = req.userId;
-    console.log('User ID:', userId);
+    
     
     if (!userId) {
       console.log('ERROR: No userId');

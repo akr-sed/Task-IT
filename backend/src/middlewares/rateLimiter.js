@@ -42,10 +42,10 @@ export const loginLimiter = buildLimiter({
   fallbackSeconds: 15 * 60,
 });
 
-// Signup rate limiter - 3 signups per hour
+// Signup rate limiter - 8 signups per hour
 export const signupLimiter = buildLimiter({
   windowMs: 60 * 60 * 1000,
-  max: 3,
+  max: 8,
   message: "Too many signup attempts. Please try again after 1 hour.",
   fallbackSeconds: 60 * 60,
 });
