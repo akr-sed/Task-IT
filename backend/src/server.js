@@ -34,6 +34,9 @@ app.use(
   })
 );
 
+console.log("CORS FRONTEND_URL:", env.FRONTEND_URL);
+
+
 const PORT = env.PORT;
 
 app.use(express.json());
