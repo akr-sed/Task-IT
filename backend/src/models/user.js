@@ -55,6 +55,11 @@ userSchema.pre("save", async function (next) {
   // Hash password if it was modified (includes new users)
   if (!this.isModified("passwordHash")) return next();
 
+  // Check if password is already hashed (bcrypt hashes start with $2b$ or $2a$)
+  if (this.passwordHash.startsWith("$2b$") || this.passwordHash.startsWith("$2a$")) {
+    return next(); // Already hashed, skip hashing
+  }
+
   try {
     const saltRounds = 10;
     this.passwordHash = await hash(this.passwordHash, saltRounds);

@@ -136,9 +136,10 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('user');
         
         // Redirect to login if not already on a public route
-        const publicRoutes = ['/login', '/signup', '/verify', '/reset-password', '/verify-reset'];
+        const publicRoutes = ['/login', '/signup', '/verify', '/reset-password', '/verify-reset', '/projects'];
         const currentPath = window.location.pathname;
         
+        // Don't redirect if on invitation page (starts with /projects)
         if (!publicRoutes.some(route => currentPath.startsWith(route))) {
           window.location.href = '/login';
         }

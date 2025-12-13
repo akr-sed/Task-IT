@@ -1,13 +1,21 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useState} from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from '../../api';
 import taskit from '../../assets/icons/task-it.svg';
 import { CheckCircle2, XCircle, User, Mail, Eye, EyeOff, Loader2, Lock } from "lucide-react";
 
 const SignupForm = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Check for pending invitation
+  const pendingInvitation = JSON.parse(localStorage.getItem("pendingInvitation") || "null");
+  const invitedEmail = location.state?.invitedEmail || pendingInvitation?.invitedEmail || "";
+  const projectName = location.state?.projectName || pendingInvitation?.projectName || "";
+
   const [formData, setFormData] = useState({
     name: "",
-    email: "",
+    email: invitedEmail,
     password: "",
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -15,13 +23,13 @@ const SignupForm = () => {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
   const [tempUserId, setTempUserId] = useState("");
-  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
+    console.log("this is to check the form data",formData)
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -166,6 +174,27 @@ const SignupForm = () => {
                   </p>
                 </div>
 
+                {/* Invitation Banner */}
+                {projectName && (
+                  <div className="mb-6 p-4 bg-gradient-to-r from-[#E31B54]/10 to-[#E91E63]/10 border-l-4 border-[#E31B54] rounded-lg">
+                    <div className="flex items-start">
+                      <div className="flex-shrink-0">
+                        <svg className="h-6 w-6 text-[#E31B54]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <div className="ml-3">
+                        <p className="text-sm font-semibold text-[#E31B54]">
+                          You've been invited to join "{projectName}"
+                        </p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          Complete signup to accept the invitation
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Error Message */}
                 {error && (
                   <div className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg animate-shake">
@@ -205,7 +234,7 @@ const SignupForm = () => {
                   {/* Email Input */}
                   <div>
                     <label htmlFor="email" className="block text-[#E31B54] font-semibold text-sm mb-2">
-                      Email Address
+                      Email Address {invitedEmail && <span className="text-xs text-gray-500">(from invitation)</span>}
                     </label>
                     <div className="relative">
                       <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
@@ -218,10 +247,18 @@ const SignupForm = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="border-2 border-[#D9D9D9] rounded-[15px] w-full h-[55px] pl-12 pr-4 focus:border-[#E31B54] focus:outline-none text-[#333333] transition-all hover:border-[#E31B54]/50"
+                        readOnly={!!invitedEmail}
+                        className={`border-2 border-[#D9D9D9] rounded-[15px] w-full h-[55px] pl-12 pr-4 focus:border-[#E31B54] focus:outline-none text-[#333333] transition-all ${
+                          invitedEmail ? 'bg-gray-50 cursor-not-allowed' : 'hover:border-[#E31B54]/50'
+                        }`}
                         placeholder="you@example.com"
                       />
                     </div>
+                    {invitedEmail && (
+                      <p className="text-xs text-gray-500 mt-1">
+                        🔒 This email is locked because you're accepting a project invitation
+                      </p>
+                    )}
                   </div>
 
                   {/* Password Input */}

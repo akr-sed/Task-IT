@@ -1,18 +1,23 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from '../../api';
 import background from '../../assets/images/Frame14main.svg';
 import taskit from '../../assets/icons/task-it.svg';
 import { XCircle, Eye, EyeOff, Loader2 } from "lucide-react";
 
 function LoginForm() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Check for message from navigation state (used for invitation redirects)
+  const stateMessage = location.state?.message;
+  
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [rememberMe, setRememberMe] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -105,6 +110,20 @@ function LoginForm() {
             <p className='text-[#828484] text-sm'>welcome to</p>
             <img src={taskit} alt="Task IT" className="h-8 sm:h-10" />
           </div>
+
+          {/* Invitation Info Message */}
+          {stateMessage && (
+            <div className="w-full p-3 bg-[#E31B54]/10 border-l-4 border-[#E31B54] rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-[#E31B54]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <p className="ml-2 text-sm text-[#E31B54] font-medium">{stateMessage}</p>
+              </div>
+            </div>
+          )}
 
           {/* Error Message */}
           {error && (

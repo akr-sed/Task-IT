@@ -37,7 +37,7 @@ const buildLimiter = ({ windowMs, max, message, fallbackSeconds }) =>
 // Login rate limiter - 5 attempts per 15 minutes
 export const loginLimiter = buildLimiter({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  // max: 5,
   message: "Too many login attempts. Please try again after 15 minutes.",
   fallbackSeconds: 15 * 60,
 });

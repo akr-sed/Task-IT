@@ -19,7 +19,7 @@ import Invite from "../models/invite.js"
 export const userRegistration = async (req, res) => {
   try {
     const { name, email, password } = req.body;
-
+    console.log(email) 
     if (!name || !email || !password) {
       return res
         .status(400)
@@ -111,6 +111,18 @@ export const verifyEmail = async (req, res, next) => {
     // Clean up temporary records
     await TempUser.findByIdAndDelete(tempUserId);
     await Code.findByIdAndDelete(codeRecord._id);
+
+    // Auto-link pending invitations to this new user
+    // Find invitations sent to this email before user registered
+    await Invite.updateMany(
+      { 
+        invitedEmail: newUser.email,
+        invitedUserId: null  // Only update invitations that don't have userId yet
+      },
+      { 
+        $set: { invitedUserId: newUser._id }
+      }
+    );
 
     // FIXME mayber create log for initial notification that welcomes the user 
 
