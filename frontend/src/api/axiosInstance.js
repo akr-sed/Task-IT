@@ -1,4 +1,5 @@
 import axios from 'axios';
+import { cacheManager } from '../utils/cacheManager.js';
 
 /**
  * Centralized Axios Instance Configuration
@@ -7,6 +8,8 @@ import axios from 'axios';
  * - Base URL from environment variables
  * - Automatic token attachment
  * - Request/Response interceptors
+ * - Built-in caching for GET requests
+ * - Request deduplication to prevent duplicate calls
  * - Centralized error handling
  */
 
@@ -19,7 +22,7 @@ const axiosInstance = axios.create({
   },
 });
 
-// Request Interceptor - Attach token to every request
+// Request Interceptor - Attach token, apply caching, and deduplication
 axiosInstance.interceptors.request.use(
   (config) => {
     // Get token from localStorage
@@ -42,6 +45,31 @@ axiosInstance.interceptors.request.use(
       config.headers['X-Device-Name'] = navigator.userAgentData?.brands?.[0]?.brand || navigator.userAgent;
       config.headers['X-Device-OsVersion'] = navigator.userAgentData?.platform || navigator.platform || 'Unknown OS';
     }
+
+    // Enable caching for GET requests (cache key: method + url + params)
+    if (config.method === 'get') {
+      const cacheKey = `${config.method}:${config.url}:${JSON.stringify(config.params || {})}`;
+      
+      // Check if response is cached
+      const cachedData = cacheManager.get(cacheKey);
+      if (cachedData) {
+        // Return cached data as a resolved promise
+        return Promise.resolve({
+          data: cachedData,
+          status: 200,
+          statusText: 'OK (from cache)',
+          headers: {},
+          config: config,
+        });
+      }
+      
+      // Store cache key in config for response interceptor
+      config.cacheKey = cacheKey;
+    }
+
+    // Enable request deduplication for all requests
+    const dedupeKey = `${config.method}:${config.url}:${JSON.stringify(config.params || config.data || {})}`;
+    config.dedupeKey = dedupeKey;
 
     // Log request in development
     if (import.meta.env.DEV) {
@@ -108,9 +136,10 @@ axiosInstance.interceptors.response.use(
         localStorage.removeItem('user');
         
         // Redirect to login if not already on a public route
-        const publicRoutes = ['/login', '/signup', '/verify', '/reset-password', '/verify-reset'];
+        const publicRoutes = ['/login', '/signup', '/verify', '/reset-password', '/verify-reset', '/projects'];
         const currentPath = window.location.pathname;
         
+        // Don't redirect if on invitation page (starts with /projects)
         if (!publicRoutes.some(route => currentPath.startsWith(route))) {
           window.location.href = '/login';
         }

@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "echo \"Use an explicit test target (e.g. npm run test:rateLimiter)\" && exit 1",
+    "test:rateLimiter": "node tests/rateLimiter.test.js",
     "dev": "nodemon src/server.js",
     "start": "node src/server.js"
   },
@@ -21,7 +22,10 @@
     "cookie-parser": "^1.4.7",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
+    "envalid": "^8.1.1",
     "express": "^4.18.2",
+    "express-rate-limit": "^8.2.1",
+    "express-validator": "^7.3.1",
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.14.3",
     "nodemailer": "^7.0.9",
@@ -29,6 +33,8 @@
     "socket.io": "^4.8.1"
   },
   "devDependencies": {
-    "nodemon": "^3.1.10"
+    "nodemon": "^3.1.10",
+    "socket.io-client": "^4.8.1",
+    "supertest": "^7.1.4"
   }
 }

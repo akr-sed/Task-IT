@@ -18,6 +18,11 @@ const inviteSchema = new mongoose.Schema(
     }
 );
 
+// Fast lookups for invitation flows
+inviteSchema.index({ inviteCode: 1 }, { name: "invite_code_idx" });
+inviteSchema.index({ projectId: 1, invitedEmail: 1 }, { name: "invite_project_email_idx" });
+inviteSchema.index({ projectId: 1, invitedUserId: 1 }, { name: "invite_project_user_idx" });
+
 
 
 // validate that at least one exist

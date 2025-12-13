@@ -4,19 +4,14 @@ import Log from "../models/log.js";
 // Fetch logs where recipient == currentUser (userAssigned)
 export async function getMyNotifications(req, res) {
   try {
-    console.log('=== GET /api/notifications/me ===');
     const userId = req.userId;
-    console.log('User ID from token:', userId);
     
     if (!userId) {
-      console.log('ERROR: No userId in request');
       return res.status(401).json({ message: "Unauthorized" });
     }
 
     // Query params for filtering
     const { unread, read, page = 1, limit = 20 } = req.query;
-    console.log('Query params:', { unread, read, page, limit });
-
     const query = { userAssigned: userId };
 
     // Filter by read status
@@ -26,12 +21,7 @@ export async function getMyNotifications(req, res) {
       query.isRead = true;
     }
 
-    console.log('MongoDB query:', JSON.stringify(query, null, 2));
-
     const skip = (parseInt(page) - 1) * parseInt(limit);
-    console.log('Skip:', skip, 'Limit:', parseInt(limit));
-
-    console.log('Executing database query...');
     const [notifications, total, unreadTotal] = await Promise.all([
       Log.find(query)
         .sort({ createdAt: -1 })
@@ -45,18 +35,7 @@ export async function getMyNotifications(req, res) {
       Log.countDocuments({ userAssigned: userId, isRead: false }),
     ]);
 
-    console.log('Query results:');
-    console.log('- Total matching logs:', total);
-    console.log('- Unread total:', unreadTotal);
-    console.log('- Notifications returned:', notifications.length);
-    if (notifications[0]) {
-      console.log('- First notification sample:');
-      console.log('  * _id:', notifications[0]._id);
-      console.log('  * title:', notifications[0].title);
-      console.log('  * userCreated:', notifications[0].userCreated);
-      console.log('  * projectId:', notifications[0].projectId);
-      console.log('  * taskId:', notifications[0].taskId);
-    }
+
 
     const response = {
       notifications,

@@ -1,5 +1,7 @@
 import mongoose from "mongoose";
-import {sign} from "jsonwebtoken"
+import jwt from "jsonwebtoken";
+
+const { sign } = jwt;
 
 
 // this model is used when someone changes the email address and wants it back (hacked)
@@ -28,6 +30,9 @@ const revertSchema = new mongoose.Schema({
         strict: 'throw', // throws if extra fields not in schema
 
     });
+
+// Quickly find revert tokens by user
+revertSchema.index({ userId: 1 }, { name: "revert_user_idx" });
 
 // Hash before saving
 revertSchema.pre('save', async function (next) {
