@@ -12,60 +12,79 @@ import mongoose from "mongoose";
 import Project from "../models/project.js"
 import Task from "../models/task.js"
 // import Log from "../models/log.js"
-import Invite from "../models/invite.js"
+import Invite from "../models/invite.js" 
 // import Revert from "../models/revert.js"
 
 // User signup controller
 export const userRegistration = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide name, email, and password" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Please provide name, email, and password",
+      });
     }
 
-    const existingUser = await TempUser.findOne({ email });
+    // IMPORTANT: attach session
+    const existingUser = await TempUser.findOne({ email }).session(session);
     if (existingUser) {
+      await session.abortTransaction();
       return res.status(400).json({ message: "Email is already registered" });
     }
 
-    // Create temporary user
-    const tempUser = new TempUser({
-      name,
-      email,
-      passwordHash: password,
-    });
+    // Create temporary user (WITH session)
+    const tempUser = await TempUser.create(
+      [
+        {
+          name,
+          email,
+          passwordHash: password, // hash later!
+        },
+      ],
+      { session }
+    );
 
-    await tempUser.save();
-
-    // Generate verification code (6 digits)
+    // Generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    // Save verification code
-    const code = new Code({
-      userId: tempUser._id,
-      code: verificationCode,
-      type: "register",
-    });
+    // Save verification code (WITH session)
+    await Code.create(
+      [
+        {
+          userId: tempUser[0]._id,
+          code: verificationCode,
+          type: "register",
+        },
+      ],
+      { session }
+    );
 
-    await code.save();
-
-    // Send verification email
+    //  Email sending is NOT part of DB transaction
     await sendVerificationEmail(email, verificationCode, name);
+
+    // Commit only AFTER everything succeeds
+    await session.commitTransaction();
 
     res.status(201).json({
       message:
         "Signup successful! Please check your email for verification code",
-
-      tempUser,
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("error in the signupController:", error);
+
     res.status(500).json({ message: "internal server error" });
+  } finally {
+    session.endSession();
   }
 };
+
 
 // Email verification controller
 export const verifyEmail = async (req, res, next) => {

@@ -22,6 +22,7 @@ const extractMongoUsername = (uri) => {
 };
 
 const app = express();
+app.set("trust proxy", 1);
 const httpServer = createServer(app);
 
 // Initialize Socket.IO
@@ -40,7 +41,7 @@ app.use(
 const PORT = env.PORT;
 
 app.use(express.json());
-// app.use(generalLimiter);
+app.use(generalLimiter);
 app.use("/api/auth", authRouter);
 app.use("/api/projects", projectRouter);
 app.use("/api/tasks", taskRouter);

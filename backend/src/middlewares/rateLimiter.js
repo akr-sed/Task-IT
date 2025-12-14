@@ -44,10 +44,15 @@ export const loginLimiter = buildLimiter({
 
 // Signup rate limiter - 8 signups per hour
 export const signupLimiter = buildLimiter({
+  skip: (req) => req.method == "OPTIONS",
   windowMs: 60 * 60 * 1000,
   max: 8,
   message: "Too many signup attempts. Please try again after 1 hour.",
   fallbackSeconds: 60 * 60,
+  keyGenerator: (req) => {
+  return `${req.ip}-${req.body?.email || "unknown"}`;
+}
+
 });
 
 // Password reset request limiter - 3 requests per hour
@@ -78,7 +83,8 @@ export const emailVerificationLimiter = buildLimiter({
 export const generalLimiter = buildLimiter({
   windowMs: 15 * 60 * 1000,
   max: 100,
-  message: "Too many requests. Please slow down and try again after 15 minutes.",
+  message:
+    "Too many requests. Please slow down and try again after 15 minutes.",
   fallbackSeconds: 15 * 60,
 });
 
