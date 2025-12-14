@@ -65,15 +65,16 @@ export const userRegistration = async (req, res) => {
       { session }
     );
 
+    // Commit only AFTER everything succeeds
+    await session.commitTransaction();
     //  Email sending is NOT part of DB transaction
     await sendVerificationEmail(email, verificationCode, name);
 
-    // Commit only AFTER everything succeeds
-    await session.commitTransaction();
 
     res.status(201).json({
       message:
         "Signup successful! Please check your email for verification code",
+      tempUser: tempUser[0]
     });
   } catch (error) {
     await session.abortTransaction();
@@ -87,78 +88,91 @@ export const userRegistration = async (req, res) => {
 
 
 // Email verification controller
+
 export const verifyEmail = async (req, res, next) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const { tempUserId, verificationCode } = req.body;
 
     if (!tempUserId || !verificationCode) {
-      return res
-        .status(400)
-        .json({ message: "Please provide tempUserId and verification code" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Please provide tempUserId and verification code",
+      });
     }
-    if (!tempUserId || !verificationCode) {
-      return res
-        .status(400)
-        .json({ message: "Please provide tempUserId and verification code" });
-    }
-    // Find the verification code
+
+    // Find the verification code (WITH session)
     const codeRecord = await Code.findOne({
       userId: tempUserId,
       code: verificationCode,
       type: "register",
-    });
+    }).session(session);
 
     if (!codeRecord) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired verification code" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Invalid or expired verification code",
+      });
     }
 
-    // Get temp user data
-    const tempUser = await TempUser.findById(tempUserId);
+    // Get temp user (WITH session)
+    const tempUser = await TempUser.findById(tempUserId).session(session);
     if (!tempUser) {
+      await session.abortTransaction();
       return res.status(400).json({
         message: "User registration has expired. Please sign up again.",
       });
     }
 
-    // Create permanent user
-    const newUser = new User({
-      name: tempUser.name,
-      email: tempUser.email,
-      passwordHash: tempUser.passwordHash,
-    });
-
-    await newUser.save();
-
-    // Clean up temporary records
-    await TempUser.findByIdAndDelete(tempUserId);
-    await Code.findByIdAndDelete(codeRecord._id);
-
-    // Auto-link pending invitations to this new user
-    // Find invitations sent to this email before user registered
-    await Invite.updateMany(
-      { 
-        invitedEmail: newUser.email,
-        invitedUserId: null  // Only update invitations that don't have userId yet
-      },
-      { 
-        $set: { invitedUserId: newUser._id }
-      }
+    // Create permanent user (WITH session)
+    const [newUser] = await User.create(
+      [
+        {
+          name: tempUser.name,
+          email: tempUser.email,
+          passwordHash: tempUser.passwordHash,
+        },
+      ],
+      { session }
     );
 
-    // FIXME mayber create log for initial notification that welcomes the user 
+    // Clean up temporary records (WITH session)
+    await TempUser.deleteOne({ _id: tempUserId }).session(session);
+    await Code.deleteOne({ _id: codeRecord._id }).session(session);
 
+    // Auto-link pending invitations (WITH session)
+    await Invite.updateMany(
+      {
+        invitedEmail: newUser.email,
+        invitedUserId: null,
+      },
+      {
+        $set: { invitedUserId: newUser._id },
+      },
+      { session }
+    );
+
+    // Commit everything atomically
+    await session.commitTransaction();
+
+    // Pass user to next middleware
     req.user = newUser;
     req.userId = newUser._id;
     next();
   } catch (error) {
+    await session.abortTransaction();
     console.error("Verification error:", error);
-    res
-      .status(500)
-      .json({ message: "Server error during verification process" });
+    res.status(500).json({
+      message: "Server error during verification process",
+    });
+  } finally {
+    session.endSession();
   }
 };
+
 
 // Resend verification code controller
 export const resendVerificationCode = async (req, res) => {

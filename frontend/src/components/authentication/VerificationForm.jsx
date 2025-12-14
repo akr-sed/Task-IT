@@ -285,7 +285,7 @@ const VerificationForm = () => {
       </div>
 
       {/* Add custom animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes slideDown {
           from {
             opacity: 0;

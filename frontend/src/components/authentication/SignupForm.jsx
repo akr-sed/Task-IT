@@ -38,6 +38,7 @@ const SignupForm = () => {
       const data = await authService.signup(formData);
       setSuccess(true);
       setTempUserId(data.tempUser._id);
+      
     } catch (error) {
       setError(
         error.response?.data?.message || error.response?.data?.error || "An error occurred during signup"
@@ -93,7 +94,7 @@ const SignupForm = () => {
                   onClick={() => navigate(`/verify?id=${tempUserId}&email=${encodeURIComponent(formData.email)}`)}
                   className='px-8 py-4 bg-gradient-to-r from-[#E31B54] to-[#E91E63] text-white font-semibold rounded-full hover:shadow-xl hover:scale-105 transition-all text-lg'
                 >
-                  Verify Now →
+                  Verify Now →{console.log(tempUserId)}
                 </button>
                 <button
                   onClick={() => setSuccess(false)}
