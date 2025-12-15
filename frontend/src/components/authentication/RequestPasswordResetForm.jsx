@@ -194,7 +194,7 @@ const RequestPasswordResetForm = () => {
       </div>
 
       {/* Custom Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%,
           100% {

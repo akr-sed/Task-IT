@@ -12,145 +12,208 @@ import mongoose from "mongoose";
 import Project from "../models/project.js"
 import Task from "../models/task.js"
 // import Log from "../models/log.js"
-import Invite from "../models/invite.js"
+import Invite from "../models/invite.js" 
 // import Revert from "../models/revert.js"
 
 // User signup controller
 export const userRegistration = async (req, res) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-      return res
-        .status(400)
-        .json({ message: "Please provide name, email, and password" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Please provide name, email, and password",
+      });
     }
 
-    const existingUser = await TempUser.findOne({ email });
+    // IMPORTANT: attach session
+    const existingUser = await TempUser.findOne({ email }).session(session);
     if (existingUser) {
+      await session.abortTransaction();
       return res.status(400).json({ message: "Email is already registered" });
     }
 
-    // Create temporary user
-    const tempUser = new TempUser({
-      name,
-      email,
-      passwordHash: password,
-    });
+    // Create temporary user (WITH session)
+    const tempUser = await TempUser.create(
+      [
+        {
+          name,
+          email,
+          passwordHash: password, // hash later!
+        },
+      ],
+      { session }
+    );
 
-    await tempUser.save();
-
-    // Generate verification code (6 digits)
+    // Generate verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
-    // Save verification code
-    const code = new Code({
-      userId: tempUser._id,
-      code: verificationCode,
-      type: "register",
-    });
+    // Save verification code (WITH session)
+    await Code.create(
+      [
+        {
+          userId: tempUser[0]._id,
+          code: verificationCode,
+          type: "register",
+        },
+      ],
+      { session }
+    );
 
-    await code.save();
-
-    // Send verification email
+    // Commit only AFTER everything succeeds
+    await session.commitTransaction();
+    //  Email sending is NOT part of DB transaction
     await sendVerificationEmail(email, verificationCode, name);
+
 
     res.status(201).json({
       message:
         "Signup successful! Please check your email for verification code",
-
-      tempUser,
+      tempUser: tempUser[0]
     });
   } catch (error) {
+    await session.abortTransaction();
     console.error("error in the signupController:", error);
+
     res.status(500).json({ message: "internal server error" });
+  } finally {
+    session.endSession();
   }
 };
 
+
 // Email verification controller
+
 export const verifyEmail = async (req, res, next) => {
+  const session = await mongoose.startSession();
+
   try {
+    session.startTransaction();
+
     const { tempUserId, verificationCode } = req.body;
 
     if (!tempUserId || !verificationCode) {
-      return res
-        .status(400)
-        .json({ message: "Please provide tempUserId and verification code" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Please provide tempUserId and verification code",
+      });
     }
-    console.log("inside the controller at backend")
-    // Find the verification code
+
+    // Find the verification code (WITH session)
     const codeRecord = await Code.findOne({
       userId: tempUserId,
       code: verificationCode,
       type: "register",
-    });
+    }).session(session);
 
     if (!codeRecord) {
-      return res
-        .status(400)
-        .json({ message: "Invalid or expired verification code" });
+      await session.abortTransaction();
+      return res.status(400).json({
+        message: "Invalid or expired verification code",
+      });
     }
 
-    // Get temp user data
-    const tempUser = await TempUser.findById(tempUserId);
+    // Get temp user (WITH session)
+    const tempUser = await TempUser.findById(tempUserId).session(session);
     if (!tempUser) {
+      await session.abortTransaction();
       return res.status(400).json({
         message: "User registration has expired. Please sign up again.",
       });
     }
 
-    // Create permanent user
-    const newUser = new User({
-      name: tempUser.name,
-      email: tempUser.email,
-      passwordHash: tempUser.passwordHash,
-    });
+    // Create permanent user (WITH session)
+    const [newUser] = await User.create(
+      [
+        {
+          name: tempUser.name,
+          email: tempUser.email,
+          passwordHash: tempUser.passwordHash,
+        },
+      ],
+      { session }
+    );
 
-    await newUser.save();
+    // Clean up temporary records (WITH session)
+    await TempUser.deleteOne({ _id: tempUserId }).session(session);
+    await Code.deleteOne({ _id: codeRecord._id }).session(session);
 
-    // Clean up temporary records
-    await TempUser.findByIdAndDelete(tempUserId);
-    await Code.findByIdAndDelete(codeRecord._id);
+    // Auto-link pending invitations (WITH session)
+    await Invite.updateMany(
+      {
+        invitedEmail: newUser.email,
+        invitedUserId: null,
+      },
+      {
+        $set: { invitedUserId: newUser._id },
+      },
+      { session }
+    );
 
-    // FIXME mayber create log for initial notification that welcomes the user 
+    // Commit everything atomically
+    await session.commitTransaction();
 
+    // Pass user to next middleware
     req.user = newUser;
     req.userId = newUser._id;
     next();
   } catch (error) {
+    await session.abortTransaction();
     console.error("Verification error:", error);
-    res
-      .status(500)
-      .json({ message: "Server error during verification process" });
+    res.status(500).json({
+      message: "Server error during verification process",
+    });
+  } finally {
+    session.endSession();
   }
 };
+
 
 // Resend verification code controller
 export const resendVerificationCode = async (req, res) => {
   try {
-    const { tempUserId } = req.body;
+    const { email } = req.body;
 
-    if (!tempUserId) {
-      return res.status(400).json({ message: "Please provide tempUserId" });
+    if (!email) {
+      return res.status(400).json({ message: "Please provide email" });
     }
 
-    // Find temp user
-    const tempUser = await TempUser.findById(tempUserId);
+    // Find temp user by email
+    const tempUser = await TempUser.findOne({ email });
     if (!tempUser) {
-      return res.status(400).json({
-        message: "User registration has expired. Please sign up again.",
+      // Generic response to prevent email enumeration
+      return res.status(200).json({
+        message: "If that email is registered, a verification code has been sent.",
+      });
+    }
+
+    // Check if code was sent recently (spam prevention - 60 second cooldown)
+    const recentCode = await Code.findOne({
+      userId: tempUser._id,
+      type: "register",
+      createdAt: { $gt: new Date(Date.now() - 60000) }, // Within last 60 seconds
+    });
+
+    if (recentCode) {
+      return res.status(429).json({
+        message: "Please wait 60 seconds before requesting another code.",
       });
     }
 
     // Delete old verification code if exists
-    await Code.deleteMany({ userId: tempUserId, type: "register" });
+    await Code.deleteMany({ userId: tempUser._id, type: "register" });
 
     // Generate new verification code
     const verificationCode = Math.floor(100000 + Math.random() * 900000);
 
     // Save new verification code
     const code = new Code({
-      userId: tempUserId,
+      userId: tempUser._id,
       code: verificationCode,
       type: "register",
     });
@@ -164,8 +227,9 @@ export const resendVerificationCode = async (req, res) => {
       tempUser.name
     );
 
+    // Generic response to prevent email enumeration
     res.status(200).json({
-      message: "Verification code has been resent to your email",
+      message: "If that email is registered, a verification code has been sent.",
     });
   } catch (error) {
     console.error("Resend code error:", error);
@@ -307,6 +371,10 @@ export const setNewPassword = async (req, res, next) => {
     }
 
     user.passwordHash = newPassword;
+    // Clear reset token after successful password reset
+    user.resetToken = null;
+    user.resetTokenExpiry = null;
+    user.lastPasswordResetAt = new Date();
     await user.save();
 
     //passing the user information to the next middleware (tokenGenerator)

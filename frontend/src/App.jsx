@@ -37,6 +37,7 @@ import TaskList from "./components/tasks/TaskList";
 import TaskDetail from "./components/tasks/TaskDetail";
 import TaskBoard from "./components/tasks/TaskAssignment";
 
+
 // Axios logging is now handled by axiosInstance interceptors
 
 // Auth check
@@ -60,6 +61,9 @@ const PublicRoute = ({ children }) => {
   }
   return children;
 };
+
+
+console.log("this is me leaving a test ", import.meta.env.VITE_API_BASE_URL)
 
 function App() {
   return (

@@ -82,8 +82,8 @@ projectRouter.post(
   acceptInvite
 );
 
-// route to get invite details
-projectRouter.get("/:projectId/invite/:inviteId", authService, getInvitation);
+// route to get invite details (public - no auth required for preview)
+projectRouter.get("/:projectId/invite/:inviteId", getInvitation);
 
 // route to show the logged in user his invitations
 

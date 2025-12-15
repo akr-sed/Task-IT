@@ -19,43 +19,66 @@ const AcceptInvite = () => {
   useEffect(() => {
     const verifyInvitation = async () => {
       try {
+        // First, try to fetch invitation details (works without auth)
+        const response = await projectService.getInvitation(projectId, inviteId);
+        const invitationData = response.data.invitation;
+        setInvitation(invitationData);
+
         const token = localStorage.getItem("token");
 
         if (!token) {
-          const invitationUrl = `/projects/${projectId}/invite/${inviteId}/${code}`;
-          localStorage.setItem("redirectAfterLogin", invitationUrl);
-          navigate("/login", {
-            state: {
-              message: "Please log in to accept this invitation",
-            },
-          });
+          // Not logged in - show invitation preview
+          // Store context for signup/login
+          localStorage.setItem("pendingInvitation", JSON.stringify({
+            projectId,
+            inviteId,
+            code,
+            invitedEmail: invitationData.invitedEmail,
+            projectName: invitationData.projectName
+          }));
+          setVerifying(false);
           return;
         }
 
+        // User is logged in - verify authorization using userId priority matching
         const userResponse = JSON.parse(localStorage.getItem("user"));
+        console.log(userResponse)
+        const currentUserId = userResponse.id;
         const currentUserEmail = userResponse.email;
 
-        
-        const response = await projectService.getInvitation(projectId, inviteId);
-
-        const invitationData = response.data.invitation;
-
-        if (invitationData.invitedEmail !== currentUserEmail) {
-          console.log("User not authorized for this invitation");
-          setForbidden(true);
-          setError(
-            "You are not authorized to view this invitation. It was sent to a different email address."
-          );
-          return;
+        // Priority 1: If invitedUserId is set, match by userId (handles email change)
+        console.log(invitationData)
+        console.log(currentUserId)
+        if (invitationData.invitedUserId) {
+          if (invitationData.invitedUserId !== currentUserId) {
+            console.log("User not authorized - userId mismatch");
+            setForbidden(true);
+            setError(
+              "You are not authorized to view this invitation. It was sent to a different account."
+            );
+            setVerifying(false);
+            return;
+          }
+          // UserId matches - allow even if email changed
+        } else {
+          // Priority 2: If only email is set (non-registered user invited), check email
+          if (invitationData.invitedEmail !== currentUserEmail) {
+            console.log("User not authorized - email mismatch");
+            setForbidden(true);
+            setError(
+              "You are not authorized to view this invitation. It was sent to a different email address."
+            );
+            setVerifying(false);
+            return;
+          }
         }
 
-        setInvitation(invitationData);
+        setVerifying(false);
       } catch (error) {
         console.error("Error verifying invitation:", error);
         setError(
           error.response?.data?.message || "Invalid or expired invitation link"
         );
-      } finally {
         setVerifying(false);
       }
     };
@@ -153,6 +176,75 @@ const AcceptInvite = () => {
           </h2>
           <p className="text-gray-600">
             Please wait while we verify your invitation...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Not logged in but have invitation details - show preview and signup/login options
+  if (!localStorage.getItem("token") && invitation && !error && !forbidden) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#FFF5F8] via-white to-[#FFF0F5] flex items-center justify-center p-4 relative overflow-hidden">
+        <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#E31B54] rounded-full opacity-5 blur-3xl"></div>
+        <div className="absolute bottom-0 left-1/4 w-96 h-96 bg-[#E91E63] rounded-full opacity-5 blur-3xl"></div>
+
+        <div className="bg-white rounded-[35px] shadow-2xl p-12 max-w-lg w-full border-2 border-[#E31B54]/20 relative z-10">
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-gradient-to-br from-[#E31B54] to-[#E91E63] rounded-full flex items-center justify-center mx-auto mb-6">
+              <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-3xl font-bold text-gray-900 mb-2">
+              You've Been Invited!
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {invitation.inviterName} invited you to join
+            </p>
+            <div className="bg-[#FFF5F8] rounded-2xl p-6 mb-6">
+              <h3 className="text-2xl font-bold text-[#E31B54] mb-2">
+                {invitation.projectName}
+              </h3>
+              <p className="text-sm text-gray-600">
+                Invitation sent to: <span className="font-semibold">{invitation.invitedEmail}</span>
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            <button
+              onClick={() => {
+                navigate("/signup", {
+                  state: {
+                    invitedEmail: invitation.invitedEmail,
+                    projectName: invitation.projectName
+                  }
+                });
+              }}
+              className="w-full h-14 bg-gradient-to-r from-[#E31B54] to-[#E91E63] text-white rounded-full font-semibold hover:shadow-xl hover:scale-105 transition-all"
+            >
+              Sign Up to Accept
+            </button>
+            
+            <button
+              onClick={() => {
+                const invitationUrl = `/projects/${projectId}/invite/${inviteId}/${code}`;
+                localStorage.setItem("redirectAfterLogin", invitationUrl);
+                navigate("/login", {
+                  state: {
+                    message: `Please log in with ${invitation.invitedEmail} to accept this invitation`
+                  }
+                });
+              }}
+              className="w-full h-14 border-2 border-[#E31B54] text-[#E31B54] rounded-full font-semibold hover:bg-[#E31B54] hover:text-white transition-all"
+            >
+              Already Have an Account? Log In
+            </button>
+          </div>
+
+          <p className="text-sm text-gray-500 text-center mt-6">
+            💡 Make sure to sign up or log in with <strong>{invitation.invitedEmail}</strong> to accept this invitation.
           </p>
         </div>
       </div>
@@ -497,7 +589,7 @@ const AcceptInvite = () => {
       </div>
 
       {/* Custom Animations */}
-      <style jsx>{`
+      <style>{`
         @keyframes float {
           0%,
           100% {

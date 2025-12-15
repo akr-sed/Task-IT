@@ -35,6 +35,10 @@ const userSchema = new mongoose.Schema(
     resetTokenExpiry: {
       type: Date,
     },
+    lastPasswordResetAt: {
+      type: Date,
+      default: null,
+    },
   },
 
   {
@@ -43,12 +47,18 @@ const userSchema = new mongoose.Schema(
   }
 );
 
+// Quick lookups for reset flows
+userSchema.index({ resetToken: 1 }, { name: "user_reset_token_idx", sparse: true });
+
 // Hash before saving
 userSchema.pre("save", async function (next) {
-  // Skip on creation
-  if (this.isNew) return next();
-
+  // Hash password if it was modified (includes new users)
   if (!this.isModified("passwordHash")) return next();
+
+  // Check if password is already hashed (bcrypt hashes start with $2b$ or $2a$)
+  if (this.passwordHash.startsWith("$2b$") || this.passwordHash.startsWith("$2a$")) {
+    return next(); // Already hashed, skip hashing
+  }
 
   try {
     const saltRounds = 10;

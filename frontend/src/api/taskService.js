@@ -27,6 +27,15 @@ const taskService = {
   },
 
   /**
+   * Get all tasks for all projects the user belongs to
+   * @returns {Promise} Response with tasks array
+   */
+  getAllProjectsTasks: async () => {
+    const response = await api.get('/tasks/all-projects');
+    return response;
+  },
+
+  /**
    * Get specific task details
    * @param {string} projectId - Project ID
    * @param {string} taskId - Task ID

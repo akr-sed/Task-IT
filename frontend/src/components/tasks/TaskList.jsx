@@ -183,7 +183,7 @@ const TaskList = () => {
 
   const getMemberName = (id) => (membersMap[id] ? membersMap[id].name : id);
 
-  const filteredTasks = tasks.filter((task) => {
+  const filteredTasks = React.useMemo(() => tasks.filter((task) => {
     const matchesStatus =
       filterStatus.value === "all" || task.status === filterStatus.value;
     const matchesPriority =
@@ -192,7 +192,7 @@ const TaskList = () => {
       task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
       task.description?.toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesPriority && matchesSearch;
-  });
+  }), [tasks, filterStatus, filterPriority, searchQuery]);
 
   const taskStats = {
     total: tasks.length,

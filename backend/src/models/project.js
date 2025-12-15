@@ -29,4 +29,8 @@ const projectSchema = new mongoose.Schema(
     }
 );
 
+// Frequent lookups by owner and membership
+projectSchema.index({ ownedBy: 1 }, { name: "project_ownedBy_idx" });
+projectSchema.index({ "members.id": 1 }, { name: "project_member_idx" });
+
 export default mongoose.model('Project', projectSchema);

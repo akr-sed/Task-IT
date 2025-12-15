@@ -70,11 +70,10 @@ const CalendarPage = () => {
         projects.forEach(p => pMap[p._id] = p);
         setProjectsMap(pMap);
 
-        // 2. Fetch tasks for all projects
-        const tasksPromises = projects.map(p => taskService.getTasksByProject(p._id));
-        const tasksResponses = await Promise.all(tasksPromises);
+        // 2. Fetch tasks for all projects in one go
+        const tasksResponse = await taskService.getAllProjectsTasks();
         
-        const allTasks = tasksResponses.flatMap(r => r.data.tasks || []);
+        const allTasks = tasksResponse.data.tasks || [];
         
         // Enrich tasks with project data for filtering
         const enrichedTasks = allTasks.map(task => ({

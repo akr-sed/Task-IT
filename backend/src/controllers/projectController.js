@@ -122,9 +122,16 @@ export async function getProject(req, res) {
 export async function fetchProjects(req, res) {
   try {
     const userId = req.userId;
+    // Optimize query with field projection, lean(), sorting, and index hints
     const projects = await Project.find({
       $or: [{ ownedBy: userId }, { "members.id": userId }],
-    });
+    })
+      .hint({ ownedBy: 1 }) // Use index for faster query execution
+      .select('name displayName description ownedBy members createdAt updatedAt')
+      .sort({ updatedAt: -1 }) // Most recently updated first
+      .lean() // Returns plain JS objects instead of Mongoose documents (faster)
+      .exec(); // Explicit execution for better performance
+    
     // FIXME : later this should be taken care of
 
     // await createLog({
@@ -452,22 +459,27 @@ export async function invite(
         message: "Email must be provided for invitation",
       });
     }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Look up user (may or may not exist)
     const user = await User.findOne({ email });
 
-    if (!user) {
-      return res
-        .status(404)
-        .json({ message: "User with this email does not exist" });
-    }
-    if (user._id.toString() === project.ownedBy.toString())
+    // Check if inviting self (only if user exists)
+    if (user && user._id.toString() === project.ownedBy.toString()) {
       return res
         .status(400)
-        .json({ message: "you cannot send an invite to yourself" });
+        .json({ message: "You cannot send an invite to yourself" });
+    }
 
-    let invitedUser = user;
+    let invitedUser = user || null;
     let invitedEmail = email;
 
-    // Check if user is already a member
+    // Check if user is already a member (only if registered)
     if (invitedUser) {
       const isMember = project.members.some(
         (member) => member.id?.toString() === invitedUser._id.toString()
@@ -480,6 +492,18 @@ export async function invite(
       }
     }
 
+    // Check if invitation already sent to this email
+    const existingInvite = await Invite.findOne({
+      projectId: project._id,
+      invitedEmail: email
+    });
+
+    if (existingInvite) {
+      return res
+        .status(400)
+        .json({ message: "An invitation has already been sent to this email" });
+    }
+
     // Generate a unique invite code
     const inviteCode =
       Math.random().toString(36).substring(2, 15) +
@@ -488,7 +512,7 @@ export async function invite(
     // Create an invitation record
     const invite = new Invite({
       projectId: project._id,
-      invitedUserId: user._id || null,
+      invitedUserId: invitedUser ? invitedUser._id : null,
       invitedEmail: invitedEmail,
       invitedBy: req.project.ownedBy,
       inviteCode: inviteCode,
@@ -559,17 +583,16 @@ export async function acceptInvite(req, res) {
     const userId = req.userId;
 
     // Check if the invitation is for this user
-    if (
-      invite.invitedUserId &&
-      invite.invitedUserId.toString() !== userId.toString()
-    ) {
-      return res
-        .status(403)
-        .json({ message: "This invitation is not for your account" });
-    }
-
-    // If invitation was sent by email, check if current user's email matches
-    if (invite.invitedEmail) {
+    // Priority 1: If invitedUserId is set, match by userId (handles email change)
+    if (invite.invitedUserId) {
+      if (invite.invitedUserId.toString() !== userId.toString()) {
+        return res
+          .status(403)
+          .json({ message: "This invitation is not for your account" });
+      }
+      // User ID matches - allow acceptance even if email changed
+    } else if (invite.invitedEmail) {
+      // Priority 2: If only email is set (unregistered user invited), check email match
       const user = await User.findById(userId);
       if (!user || user.email !== invite.invitedEmail) {
         return res
@@ -578,6 +601,9 @@ export async function acceptInvite(req, res) {
             message: "This invitation is for a different email address",
           });
       }
+    } else {
+      // Should never happen due to model validation, but handle gracefully
+      return res.status(400).json({ message: "Invalid invitation data" });
     }
 
     // Check if user is already a member
@@ -628,7 +654,7 @@ export async function acceptInvite(req, res) {
 
 export async function declineInvite(req, res) {
   try {
-    const { projectId, inviteId, code } = req.params;
+    const { projectId, inviteId, inviteCode } = req.params;
 
     // Find the invitation in the database
     const invite = await Invite.findById(inviteId);
@@ -645,6 +671,11 @@ export async function declineInvite(req, res) {
       return res.status(400).json({ message: "Invalid invitation details" });
     }
 
+    // Verify the invite code matches (security check)
+    if (invite.inviteCode !== inviteCode) {
+      return res.status(400).json({ message: "Invalid invite code" });
+    }
+
     // Get current user from auth middleware
     const currentUserId = req.userId;
     const user = req.user || (await User.findById(currentUserId));
@@ -654,15 +685,22 @@ export async function declineInvite(req, res) {
     }
 
     // Verify that the invitation was sent to this user
-    const isInvitedUser =
-      (invite.invitedUserId &&
-        invite.invitedUserId.toString() === currentUserId) ||
-      (invite.invitedEmail && invite.invitedEmail === user.email);
-
-    if (!isInvitedUser) {
-      return res.status(403).json({
-        message: "You are not authorized to decline this invitation",
-      });
+    // Priority 1: If invitedUserId is set, match by userId (handles email change)
+    if (invite.invitedUserId) {
+      if (invite.invitedUserId.toString() !== currentUserId) {
+        return res.status(403).json({
+          message: "You are not authorized to decline this invitation",
+        });
+      }
+    } else if (invite.invitedEmail) {
+      // Priority 2: If only email is set (unregistered user invited), check email match
+      if (!user || user.email !== invite.invitedEmail) {
+        return res.status(403).json({
+          message: "You are not authorized to decline this invitation",
+        });
+      }
+    } else {
+      return res.status(400).json({ message: "Invalid invitation data" });
     }
 
     // Get project details for the response
@@ -736,7 +774,9 @@ export async function getInvitation(req, res) {
         projectId: project._id,
         projectName: project.name,
         inviterName: inviter ? inviter.name : "A Taskit user",
+        inviterId: invite.invitedBy,
         invitedEmail: invite.invitedEmail,
+        invitedUserId: invite.invitedUserId, // Include userId for priority matching
       },
     });
   } catch (error) {

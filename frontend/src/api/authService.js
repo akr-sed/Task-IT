@@ -14,6 +14,8 @@ const authService = {
    */
   signup: async (userData) => {
     const response = await api.post('/auth/signup', userData);
+    
+
     return response.data;
   },
 
@@ -29,12 +31,12 @@ const authService = {
 
   /**
    * Resend verification code
-   * @param {string} tempUserId - Temporary user ID
+   * @param {string} email - User email address
    * @returns {Promise} Response with success message
    */
-  resendVerificationCode: async (tempUserId) => {
+  resendVerificationCode: async (email) => {
     const response = await api.post('/auth/verify-email/resend-verification-code', {
-      tempUserId,
+      email,
     });
     return response.data;
   },

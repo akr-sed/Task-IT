@@ -25,4 +25,7 @@ const codeSchema = new mongoose.Schema({
 
     });
 
+// Fast lookup by userId/type/code for verification flows
+codeSchema.index({ userId: 1, type: 1, code: 1 }, { name: "code_user_type_code_idx" });
+
 export default mongoose.model('Code', codeSchema);

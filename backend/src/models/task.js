@@ -31,4 +31,10 @@ const taskSchema = new mongoose.Schema(
     }
 );
 
+// Optimize common task queries by project/status/assignee/due date
+taskSchema.index({ projectId: 1, status: 1 }, { name: "task_project_status_idx" });
+taskSchema.index({ projectId: 1, assignedTo: 1 }, { name: "task_project_assignee_idx" });
+taskSchema.index({ projectId: 1, dueDate: 1 }, { name: "task_project_due_idx" });
+taskSchema.index({ assignedTo: 1 }, { name: "task_assignee_idx" }); // For user tasks queries
+
 export default mongoose.model("Task", taskSchema);
