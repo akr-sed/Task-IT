@@ -65,7 +65,7 @@ OAuth for authentication and optional email services for notifications.
 -   User registration, login, and profile management\
 -   Project creation, invitation, and role assignment\
 -   Task creation, update, deletion, and completion marking\
--   Task comments and file attachments\
+-   Task comments\
 -   Dashboard with progress visualization\
 -   In-app notifications and email invitations
 
