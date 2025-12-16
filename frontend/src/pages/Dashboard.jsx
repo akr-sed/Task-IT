@@ -11,6 +11,7 @@ import CalendarCard from "../components/dashboard/cards/CalendarCard";
 import ProgressCard from "../components/dashboard/cards/ProgressCard";
 import FloatingActionButton from "../components/dashboard/shared/FloatingActionButton";
 
+
 const Dashboard = () => {
   const {
     projects,
@@ -37,8 +38,8 @@ const Dashboard = () => {
     <div className="w-full max-w-[1600px] mx-auto space-y-4 sm:space-y-6 px-2 sm:px-4 lg:px-0">
       {/* Welcome Header */}
       <div className="mb-4 sm:mb-6">
-        <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
-          Welcome back! 👋
+        <h1 className="text-2xl sm:text-3xl flex items-center gap-4 lg:text-4xl font-bold text-gray-900 mb-1 sm:mb-2">
+          Hey There! 
         </h1>
         <p className="text-gray-600 text-sm sm:text-base lg:text-lg">
           Here's what's happening with your projects today

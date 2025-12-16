@@ -3,7 +3,8 @@ import { useNavigate, useLocation } from "react-router-dom";
 import { authService } from '../../api';
 import background from '../../assets/images/Frame14main.svg';
 import taskit from '../../assets/icons/task-it.svg';
-import { XCircle, Eye, EyeOff, Loader2 } from "lucide-react";
+
+import { XCircle, Eye, EyeOff, Loader2,NotebookTabs , Users , Zap} from "lucide-react";
 
 function LoginForm() {
   const location = useLocation();
@@ -88,13 +89,13 @@ function LoginForm() {
             {/* Feature Pills */}
             <div className="flex flex-wrap gap-3 justify-center mt-8">
               <div className="bg-white/80 backdrop-blur-sm px-5 py-2 rounded-full shadow-md">
-                <span className="text-sm font-medium text-gray-700">📋 Project Management</span>
+                <span className="text-sm font-medium flex justify-center items-center gap-2 text-gray-700"><NotebookTabs  size={20} color="#E31B54" /> Project Management</span>
               </div>
               <div className="bg-white/80 backdrop-blur-sm px-5 py-2 rounded-full shadow-md">
-                <span className="text-sm font-medium text-gray-700">👥 Team Collaboration</span>
+                <span className="text-sm font-medium text-gray-700 flex items-center justify-center gap-2"><Users size={20} color="#E31B54" /> Team Collaboration</span>
               </div>
               <div className="bg-white/80 backdrop-blur-sm px-5 py-2 rounded-full shadow-md">
-                <span className="text-sm font-medium text-gray-700">⚡ Real-time Updates</span>
+                <span className="text-sm font-medium text-gray-700 flex justify-center items-center gap-2"><Zap size={20} color="#E31B54" /> Real-time Updates</span>
               </div>
             </div>
           </div>
@@ -223,19 +224,38 @@ function LoginForm() {
               {/* Sign up Button - Outlined Pink */}
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => navigate('/signup')}
-                className='w-full sm:w-4/5 h-[50px] border-2 border-[#E31B54] text-[#E31B54] font-semibold rounded-full hover:bg-[#E31B54] hover:text-white hover:shadow-lg hover:scale-[1.02] transition-all'
-              >
-                Sign up
+                className='w-full sm:w-4/5 h-[50px] border-2 border-[#E31B54] text-[#E31B54] font-semibold rounded-full hover:bg-[#E31B54] hover:text-white hover:shadow-lg hover:scale-[1.02] transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100'
+              > {loading ? (
+                  <span className='flex items-center justify-center'>
+                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                    Logging in...
+                  </span>
+                ) : (
+                  'Sign up'
+                )}
+                
+
               </button>
 
               {/* Forgot Password Link */}
               <button
                 type="button"
+                disabled={loading}
                 onClick={() => navigate('/reset-password')}
-                className='text-[#E31B54] text-sm font-medium cursor-pointer hover:underline transition-all mt-2'
+                className='text-[#E31B54] text-sm font-medium cursor-pointer hover:underline transition-all mt-2 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100'
               >
-                Forgot your password ?
+                {loading ? (
+                  <span className='flex items-center justify-center'>
+                    <Loader2 className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" />
+                    Logging in...
+                  </span>
+                ) : (
+                  'Forgot your password ?'
+                )}
+                
+                
               </button>
             </div>
           </form>

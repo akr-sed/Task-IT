@@ -31,7 +31,10 @@ const EditProject = () => {
 
     try {
       const data = await projectService.getProjectById(projectId);
-      const projectData = data.project;
+      console.log(data)
+
+      const projectData = data.data.project;
+      console.log(projectData)
       setProject(projectData);
       
       // Set form data with current project values

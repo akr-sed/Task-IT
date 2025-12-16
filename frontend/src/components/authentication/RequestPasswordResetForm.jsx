@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { authService } from '../../api';
 import taskit from "../../assets/icons/task-it.svg";
-import { Mail, Lock, Key, CheckCircle, XCircle, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
+import { Mail,Brain, Lock, Key, CheckCircle, XCircle, Loader2, ArrowRight, ArrowLeft } from 'lucide-react';
 
 const RequestPasswordResetForm = () => {
   const [email, setEmail] = useState("");
@@ -135,8 +135,8 @@ const RequestPasswordResetForm = () => {
                   placeholder="you@example.com"
                 />
               </div>
-              <p className="text-xs text-gray-500 mt-2 ml-1">
-                💡 We'll send a 6-digit code to this email
+              <p className="text-xs flex justify-start gap-2 items-center text-gray-500 mt-2 ml-1">
+                <Brain size={18} color="#E31B54"/> We'll send a 6-digit code to this email
               </p>
             </div>
 

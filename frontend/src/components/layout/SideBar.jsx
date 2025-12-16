@@ -118,32 +118,32 @@ const SideBar = ({ isOpen, setIsOpen, currentPath }) => {
                 }}
                 className={`w-full flex items-center ${isOpen ? 'gap-2 sm:gap-3 px-2 sm:px-3' : 'justify-center'} py-2.5 sm:py-3 rounded-xl transition-all group relative ${
                   active
-                    ? `bg-gradient-to-r ${item.color} text-white shadow-lg scale-105`
-                    : 'hover:bg-gray-50 text-gray-700 hover:scale-105'
+                    ? `bg-gradient-to-br from-[#E31B54] to-[#E91E63] ` 
+                    : 'hover:bg-gray-50 text-black hover:scale-105'
                 }`}
                 title={!isOpen ? item.label : ''}
               >
                 {/* Active Indicator */}
                 {active && (
-                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 sm:h-8 bg-white rounded-r-full"></div>
+                  <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 sm:h-8 rounded-r-full"></div>
                 )}
 
                 {/* Icon */}
                 <div
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
                     active
-                      ? 'bg-white/20 backdrop-blur-sm'
-                      : `bg-gradient-to-br ${item.color} text-white group-hover:scale-110`
+                      ? 'text-white'
+                      : `text-black`
                   }`}
                 >
-                  <item.icon className={`w-4 h-4 sm:w-5 sm:h-5 ${active ? 'text-white' : ''}`} />
+                  <item.icon className={`w-4 h-4 sm:w-5 sm:h-5`} />
                 </div>
 
                 {/* Label */}
                 {isOpen && (
                   <span
                     className={`font-semibold text-xs sm:text-sm whitespace-nowrap ${
-                      active ? 'text-white' : 'text-gray-700'
+                      active ? 'text-white' : 'text-black'
                     }`}
                   >
                     {item.label}
@@ -169,11 +169,11 @@ const SideBar = ({ isOpen, setIsOpen, currentPath }) => {
                 setIsOpen(false);
               }
             }}
-            className={`w-full flex items-center ${isOpen ? 'gap-2 sm:gap-3 px-2 sm:px-3' : 'justify-center'} py-2.5 sm:py-3 rounded-xl transition-all hover:bg-gray-50 text-gray-700 hover:scale-105`}
+            className={`w-full flex items-center ${isOpen ? 'gap-2 sm:gap-3 px-2 sm:px-3' : 'justify-center'} py-2.5 sm:py-3 rounded-xl transition-all hover:bg-gray-50 text-black hover:scale-105`}
             title={!isOpen ? 'Settings' : ''}
           >
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-gray-400 to-gray-600 flex items-center justify-center text-white flex-shrink-0">
-              <Settings className="w-4 h-4 sm:w-5 sm:h-5" />
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center text-black flex-shrink-0">
+              <Settings className={`w-4 h-4 sm:w-5 sm:h-5 `} />
             </div>
             {isOpen && <span className="font-semibold text-xs sm:text-sm">Settings</span>}
           </button>

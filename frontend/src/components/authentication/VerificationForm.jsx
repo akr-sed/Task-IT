@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { authService } from '../../api';
 import taskit from '../../assets/icons/task-it.svg';
-import { Mail, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Mail,Brain, CheckCircle, XCircle, Loader2 } from "lucide-react";
 
 const VerificationForm = () => {
   const [verificationCode, setVerificationCode] = useState(["", "", "", "", "", ""]);
@@ -217,8 +217,8 @@ const VerificationForm = () => {
                 ))}
               </div>
 
-              <p className="text-xs text-gray-500 text-center mt-4">
-                💡 Tip: You can paste the entire code
+              <p className="text-xs flex items-center justify-center gap-2 text-gray-600 text-center mt-4">
+                <Brain color="#E31B54" /> Tip: You can paste the entire code
               </p>
             </div>
 
