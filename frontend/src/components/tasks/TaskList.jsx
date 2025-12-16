@@ -181,7 +181,10 @@ const TaskList = () => {
     fetchProjectAndTasks();
   }, [fetchProjectAndTasks]);
 
-  const getMemberName = (id) => (membersMap[id] ? membersMap[id].name : id);
+  const getMemberName = useCallback((id) => {
+    if (!id) return "Unknown User";
+    return membersMap[id] ? membersMap[id].name : "Unknown User";
+  }, [membersMap]);
 
   const filteredTasks = React.useMemo(() => tasks.filter((task) => {
     const matchesStatus =

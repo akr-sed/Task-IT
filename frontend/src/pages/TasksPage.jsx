@@ -311,13 +311,30 @@ const TasksPage = () => {
       });
       setColumns(newCols);
 
-      const userIds = [
-        ...new Set(
-          projectsList.flatMap((project) =>
-            project.members ? project.members.map((m) => m.id) : []
-          )
-        ),
-      ];
+      // Collect all user IDs: project members, owners, and task assignees
+      const userIdsSet = new Set();
+      
+      projectsList.forEach((project) => {
+        // Add project owner
+        if (project.ownedBy) {
+          userIdsSet.add(project.ownedBy);
+        }
+        // Add project members
+        if (project.members) {
+          project.members.forEach((m) => {
+            if (m.id) userIdsSet.add(m.id);
+          });
+        }
+      });
+      
+      // Add task assignees
+      allTasks.forEach((task) => {
+        if (task.assignedTo) {
+          userIdsSet.add(task.assignedTo);
+        }
+      });
+
+      const userIds = Array.from(userIdsSet);
 
       if (userIds.length > 0) {
         const usersMap = await fetchUsersMap(userIds);
@@ -338,9 +355,9 @@ const TasksPage = () => {
     
   }, [fetchAllData]);
 
-  const getTaskUserName = (userId) => {
+  const getTaskUserName = useCallback((userId) => {
     return getUserName(userId, membersMap);
-  };
+  }, [membersMap]);
 
   const canManageTask = (task) => {
     return task.isProjectOwner || task.isProjectAdmin;
