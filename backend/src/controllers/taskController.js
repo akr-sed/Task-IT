@@ -461,7 +461,7 @@ export async function listTasksOfProject(req, res) {
     // Optimize query with index hint, field projection (including comments), sorting, and lean()
     const tasks = await Task.find({ projectId: projectId })
       .hint('task_project_status_idx') // Use compound index for faster lookup
-      .select('title description status priority dueDate assignedTo projectId comments createdAt updatedAt')
+      .select('title description status priority activity dueDate assignedTo projectId comments createdAt updatedAt')
       .sort({ createdAt: -1 }) // Newest first
       .lean() // Returns plain JS objects (faster, no Mongoose overhead)
       .exec(); // Explicit execution
