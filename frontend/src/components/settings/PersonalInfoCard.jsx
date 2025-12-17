@@ -11,7 +11,7 @@ const PersonalInfoCard = ({
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow flex flex-col">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E31B54] to-[#E91E63] flex items-center justify-center">
           <User className="w-5 h-5 text-white" />
         </div>
         <h2 className="text-xl font-bold text-gray-900">Personal Information</h2>
@@ -51,7 +51,7 @@ const PersonalInfoCard = ({
                 type="button"
                 onClick={onRequestEmailChange}
                 disabled={saving}
-                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
+                className="absolute right-2 top-1/2 -translate-y-1/2 px-3 py-1.5 bg-gradient-to-tr from-[#E31B54] to-[#E91E63] text-white text-sm font-medium rounded-lg hover:bg-blue-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed pointer-events-auto"
               >
                 Change
               </button>

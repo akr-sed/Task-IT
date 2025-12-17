@@ -7,6 +7,7 @@ import {
   activityIcons,
 } from "../../utils/tasksDetailsStyles";
 import { getInitials, getRandomColor } from "../../utils/avatarUtils";
+import { Calendar } from "lucide-react";
 
 const TaskListCard = ({
   task,
@@ -385,12 +386,27 @@ const TaskListCard = ({
                 </span>
               )}
 
-              {/* Created Date */}
-              <span className="text-xs text-gray-500 bg-gray-50 rounded-lg px-2 py-1">
-                {new Date(task.createdAt).toLocaleDateString("en-US", {
-                  month: "short",
-                  day: "numeric",
-                })}
+              {/* Due Date*/}
+              
+              <span className="text-xs text-gray-500 flex gap-1 justify-center items-center bg-gray-50 rounded-lg px-2 py-1">
+                <Calendar size={14} color="black"/>
+                <span > Due To : </span>
+                <span className="text-black">
+
+                {task.dueDate ? (
+
+                  new Date(task.dueDate).toLocaleDateString("en-US", {
+                    month: "short",
+                    day: "numeric",
+                    year:"numeric"
+                    
+                  }
+                )
+              ):
+              "not set"
+              }
+
+                </span>
               </span>
             </div>
           </div>

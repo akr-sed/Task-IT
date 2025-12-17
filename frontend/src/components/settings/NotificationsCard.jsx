@@ -5,7 +5,7 @@ const NotificationsCard = ({ notifications, onToggle }) => {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-shadow">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E31B54] to-[#E91E63] flex items-center justify-center">
           <Bell className="w-5 h-5 text-white" />
         </div>
         <h2 className="text-xl font-bold text-gray-900">Notifications</h2>

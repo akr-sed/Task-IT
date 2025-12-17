@@ -5,7 +5,7 @@ const DangerZoneCard = ({ saving, onRequestAccountDeletion }) => {
   return (
     <div className="bg-white rounded-2xl shadow-lg border border-red-200 p-6 hover:shadow-xl transition-shadow lg:col-span-2">
       <div className="flex items-center gap-3 mb-6">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#E31B54] to-[#E91E63] flex items-center justify-center">
           <AlertTriangle className="w-5 h-5 text-white" />
         </div>
         <h2 className="text-xl font-bold text-gray-900">Danger Zone</h2>
@@ -20,7 +20,7 @@ const DangerZoneCard = ({ saving, onRequestAccountDeletion }) => {
             <div className="flex-1">
               <h3 className="text-lg font-bold text-gray-900 mb-2">Delete Account</h3>
               <p className="text-sm text-gray-600 mb-4">
-                Permanently delete your account and all data. This cannot be undone.
+                Permanently delete your account. This cannot be undone.
               </p>
               <button
                 type="button"

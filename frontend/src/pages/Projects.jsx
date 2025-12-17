@@ -212,7 +212,8 @@ const Projects = () => {
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-[#E31B54] mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading projects...</p>
+          <p className="text-gray-600 font-medium">Loading your Projects.</p>
+          <p className="text-gray-400 text-sm mt-2">Please wait while we fetch your data</p>
         </div>
       </div>
     );

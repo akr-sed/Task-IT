@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { taskService } from '../../api';
+import { taskService } from "../../api";
 import { getInitials, getRandomColor } from "../../utils/avatarUtils";
+import { CircleCheck,CircleCheckBig, ClipboardList , Users} from "lucide-react";
 
 const ProjectOverview = ({ project, members, ownerData }) => {
   const [tasks, setTasks] = useState([]);
@@ -87,19 +88,7 @@ const ProjectOverview = ({ project, members, ownerData }) => {
         <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl col-span-2 shadow-lg border-2 border-gray-200 overflow-hidden">
           <div className="bg-gradient-to-r from-[#E31B54] to-[#E91E63] px-6 py-4">
             <h3 className="text-lg font-bold text-white flex items-center gap-2">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <CircleCheck />
               Project Health
             </h3>
           </div>
@@ -107,21 +96,9 @@ const ProjectOverview = ({ project, members, ownerData }) => {
             {/* Mini Stats Grid */}
             <div className="grid grid-cols-2 gap-3 mb-4">
               {/* Total Tasks */}
-              <div className="text-center p-4 bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border-2 border-gray-200">
+              <div className="text-center p-4 ">
                 <div className="w-10 h-10 bg-gradient-to-br from-gray-400 to-gray-600 rounded-xl mx-auto mb-2 flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
-                    />
-                  </svg>
+                  <ClipboardList color="white" strokeWidth={2} />
                 </div>
                 <p className="text-2xl font-bold text-gray-900">
                   {stats.total}
@@ -132,21 +109,9 @@ const ProjectOverview = ({ project, members, ownerData }) => {
               </div>
 
               {/* Completed */}
-              <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border-2 border-green-200">
+              <div className="text-center p-4 ">
                 <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-green-600 rounded-xl mx-auto mb-2 flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
+                  <CircleCheckBig color="white" strokeWidth={2} />
                 </div>
                 <p className="text-2xl font-bold text-green-700">
                   {stats.completed}
@@ -157,21 +122,9 @@ const ProjectOverview = ({ project, members, ownerData }) => {
               </div>
 
               {/* Team Size */}
-              <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border-2 border-purple-200">
+              <div className="text-center p-4 ">
                 <div className="w-10 h-10 bg-gradient-to-br from-purple-400 to-purple-600 rounded-xl mx-auto mb-2 flex items-center justify-center">
-                  <svg
-                    className="w-5 h-5 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                    />
-                  </svg>
+                  <Users color="white" strokeWidth={2} />
                 </div>
                 <p className="text-2xl font-bold text-purple-700">
                   {stats.teamSize}
@@ -182,7 +135,7 @@ const ProjectOverview = ({ project, members, ownerData }) => {
               </div>
 
               {/* Activity Level */}
-              <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border-2 border-blue-200">
+              <div className="text-center p-4 ">
                 <div className="text-3xl mb-2">{activityLevel.icon}</div>
                 <p className={`text-sm font-bold ${activityLevel.color}`}>
                   {activityLevel.label}

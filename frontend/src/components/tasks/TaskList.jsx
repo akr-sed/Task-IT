@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { projectService, taskService, authService } from "../../api";
 import Select from "react-select";
 import { getInitials, getRandomColor } from "../../utils/avatarUtils";
+import { Calendar } from "lucide-react";
 
 const priorityColors = {
   low: "bg-blue-100 text-blue-700 border-blue-200",
@@ -181,21 +182,29 @@ const TaskList = () => {
     fetchProjectAndTasks();
   }, [fetchProjectAndTasks]);
 
-  const getMemberName = useCallback((id) => {
-    if (!id) return "Unknown User";
-    return membersMap[id] ? membersMap[id].name : "Unknown User";
-  }, [membersMap]);
+  const getMemberName = useCallback(
+    (id) => {
+      if (!id) return "Unknown User";
+      return membersMap[id] ? membersMap[id].name : "Unknown User";
+    },
+    [membersMap]
+  );
 
-  const filteredTasks = React.useMemo(() => tasks.filter((task) => {
-    const matchesStatus =
-      filterStatus.value === "all" || task.status === filterStatus.value;
-    const matchesPriority =
-      filterPriority.value === "all" || task.priority === filterPriority.value;
-    const matchesSearch =
-      task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      task.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesStatus && matchesPriority && matchesSearch;
-  }), [tasks, filterStatus, filterPriority, searchQuery]);
+  const filteredTasks = React.useMemo(
+    () =>
+      tasks.filter((task) => {
+        const matchesStatus =
+          filterStatus.value === "all" || task.status === filterStatus.value;
+        const matchesPriority =
+          filterPriority.value === "all" ||
+          task.priority === filterPriority.value;
+        const matchesSearch =
+          task.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          task.description?.toLowerCase().includes(searchQuery.toLowerCase());
+        return matchesStatus && matchesPriority && matchesSearch;
+      }),
+    [tasks, filterStatus, filterPriority, searchQuery]
+  );
 
   const taskStats = {
     total: tasks.length,
@@ -562,25 +571,31 @@ const TaskList = () => {
                       )}
 
                       {/* Created Date */}
-                      <span className="text-xs text-gray-500 flex items-center gap-1">
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
-                        >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                          />
-                        </svg>
+                      <span className="text-xs text-gray-500 flex items-center gap-1 bg-gray-100 rounded-lg px-2 py-1">
+                        <Calendar size={14} color="black" />
+                        <span>Created : </span>
                         {new Date(task.createdAt).toLocaleDateString("en-US", {
                           month: "short",
                           day: "numeric",
                           year: "numeric",
                         })}
+                      </span>
+
+                      <span className="text-xs text-gray-500 flex gap-1 justify-center items-center bg-gray-100 rounded-lg px-2 py-1">
+                        <Calendar size={14} color="black" />
+                        <span> Due To : </span>
+                        <span className="text-black">
+                          {task.dueDate
+                            ? new Date(task.dueDate).toLocaleDateString(
+                                "en-US",
+                                {
+                                  month: "short",
+                                  day: "numeric",
+                                  year: "numeric",
+                                }
+                              )
+                            : "not set"}
+                        </span>
                       </span>
                     </div>
                   </div>

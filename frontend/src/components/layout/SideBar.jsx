@@ -26,35 +26,35 @@ const SideBar = ({ isOpen, setIsOpen, currentPath }) => {
       label: "Dashboard",
       icon: Home,
       path: "/dashboard",
-      color: "from-purple-400 to-purple-600",
+
     },
     {
       id: "projects",
       label: "Projects",
       icon: FolderKanban,
       path: "/projects",
-      color: "from-blue-400 to-blue-600",
+
     },
     {
       id: "tasks",
       label: "My Tasks",
       icon: ListTodo,
       path: "/tasks",
-      color: "from-green-400 to-green-600",
+      
     },
     {
       id: "calendar",
       label: "Calendar",
       icon: Calendar,
       path: "/calendar",
-      color: "from-red-400 to-red-600",
+      
     },
     {
       id: "team",
       label: "Team",
       icon: Users,
       path: "/team",
-      color: "from-yellow-400 to-yellow-600",
+      
     },
   ];
 
@@ -160,7 +160,7 @@ const SideBar = ({ isOpen, setIsOpen, currentPath }) => {
                 {/* Icon */}
                 <div
                   className={`w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${
-                    active ? "text-white" : `text-black`
+                    active ? "text-white" : ` text-black`
                   }
                   `}
                 >
