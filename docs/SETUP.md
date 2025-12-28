@@ -1,176 +1,487 @@
-# 🧩 TaskIt Project – Developer Setup Guide
+# 🛠️ Development Setup Guide
 
-Welcome to the **TaskIt** project!
-This document explains how each team member should set up their local environment to start contributing smoothly.
-
----
-
-## 1. 📦 Prerequisites
-
-Make sure you have the following installed on your system:
-
-* **Node.js** (version 18 or higher)
-* **npm** (comes with Node)
-* **Git**
-* **VS Code** (recommended editor)
-* **MongoDB Compass** (for backend team)
+Complete guide to set up TaskIT for local development.
 
 ---
 
-## 2. 🧰 Clone the Repository
+## Table of Contents
 
-1. Open your terminal and run:
-
-   ```bash
-   git clone git@github.com:akr-sed/Taskit.git
-   or
-   git clone https://github.com/akr-sed/Taskit.git
-   cd Taskit
-   ```
-
-2. You should now see this structure:
-
-   ```
-   project-root/
-   ├── backend/
-   ├── frontend/
-   └── .gitignore
-   ```
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Backend Setup](#backend-setup)
+- [Frontend Setup](#frontend-setup)
+- [Environment Variables](#environment-variables)
+- [Database Setup](#database-setup)
+- [Gmail API Setup](#gmail-api-setup)
+- [Running the Application](#running-the-application)
+- [Development Workflow](#development-workflow)
+- [Troubleshooting](#troubleshooting)
 
 ---
 
-## 3. ⚙️ Install Dependencies
+## Prerequisites
 
-Before doing anything else, install all required packages.
+### Required Software
 
-In both folders (`frontend` and `backend`), run:
+| Software | Version | Purpose |
+|----------|---------|---------|
+| Node.js | 18.x or higher | Runtime |
+| npm | 9.x or higher | Package manager |
+| Git | 2.x or higher | Version control |
+| MongoDB | 7.x or higher (or Atlas) | Database |
+
+### Recommended Tools
+
+- **VS Code** - Recommended IDE
+- **MongoDB Compass** - GUI for database management
+- **Postman** - API testing
+
+### Verify Installation
+
+```bash
+node --version    # v18.x.x or higher
+npm --version     # 9.x.x or higher
+git --version     # 2.x.x or higher
+```
+
+---
+
+## Quick Start
+
+```bash
+# 1. Clone the repository
+git clone https://github.com/akr-sed/Taskit.git
+cd Taskit
+
+# 2. Install all dependencies
+npm install --prefix backend
+npm install --prefix frontend
+
+# 3. Set up environment variables
+cp backend/.env.example backend/.env
+# Edit backend/.env with your configuration
+
+# 4. Start development servers
+# Terminal 1 - Backend
+cd backend && npm run dev
+
+# Terminal 2 - Frontend
+cd frontend && npm run dev
+```
+
+---
+
+## Backend Setup
+
+### 1. Navigate to Backend
 
 ```bash
 cd backend
-npm install
-cd ../frontend
+```
+
+### 2. Install Dependencies
+
+```bash
 npm install
 ```
 
-This installs all dependencies listed in `package.json`.
+### 3. Dependencies Overview
+
+```json
+{
+  "dependencies": {
+    "express": "^4.18.2",      // Web framework
+    "mongoose": "^8.14.3",     // MongoDB ODM
+    "socket.io": "^4.8.1",     // Real-time communication
+    "bcrypt": "^6.0.0",        // Password hashing
+    "jsonwebtoken": "^9.0.2",  // JWT authentication
+    "nodemailer": "^7.0.9",    // Email sending
+    "cors": "^2.8.5",          // Cross-origin requests
+    "dotenv": "^17.2.3",       // Environment variables
+    "envalid": "^8.1.1"        // Environment validation
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.10"       // Auto-restart on changes
+  }
+}
+```
+
+### 4. Project Structure
+
+```
+backend/
+├── src/
+│   ├── server.js          # Application entry point
+│   ├── config/
+│   │   ├── db.js          # MongoDB connection
+│   │   ├── env.js         # Environment validation
+│   │   └── socket.js      # Socket.IO setup
+│   ├── controllers/       # Route handlers
+│   ├── middlewares/       # Express middlewares
+│   ├── models/            # Mongoose schemas
+│   ├── routes/            # API routes
+│   └── utils/             # Helper functions
+└── package.json
+```
 
 ---
 
-## 4. 🔐 Environment Variables Setup (FOR BACKEND TEAM)
+## Frontend Setup
 
-Each member must create their own `.env` file **inside the `backend/` folder**.
+### 1. Navigate to Frontend
 
-You will find a file named `.env.example` in the same directory.
-Use it as a template.
+```bash
+cd frontend
+```
 
-1. Copy the file:
+### 2. Install Dependencies
 
-   ```bash
-   cp backend/.env.example backend/.env
-   ```
+```bash
+npm install
+```
 
-2. Open the new `.env` file and fill in the values you receive from the project manager (Connection string to the database...etc).
+### 3. Dependencies Overview
 
-   Example:
+```json
+{
+  "dependencies": {
+    "react": "^19.1.1",              // UI library
+    "react-dom": "^19.1.1",          // React DOM
+    "react-router": "^7.9.4",        // Routing
+    "axios": "^1.12.2",              // HTTP client
+    "socket.io-client": "^4.8.1",    // Real-time client
+    "lucide-react": "^0.555.0"       // Icons
+  },
+  "devDependencies": {
+    "vite": "^7.1.7",                // Build tool
+    "tailwindcss": "^3.4.18",        // CSS framework
+    "@vitejs/plugin-react": "^5.0.4" // Vite React plugin
+  }
+}
+```
 
-   ```
-   PORT=5000
-   MONGO_URI=mongodb+srv://backend-lead:<password>@cluster0.xxxxx.mongodb.net/taskit_dev?retryWrites=true&w=majority
-   ```
+### 4. Project Structure
 
-   * **Do not share your .env file or push it to GitHub.**
-   * The `.gitignore` file ensures it won’t be tracked.
+```
+frontend/
+├── src/
+│   ├── main.jsx           # React entry point
+│   ├── App.jsx            # Root component
+│   ├── index.css          # Global styles
+│   ├── api/               # API services
+│   ├── assets/            # Static assets
+│   ├── components/        # React components
+│   ├── hooks/             # Custom hooks
+│   ├── pages/             # Page components
+│   └── utils/             # Helper functions
+├── public/                # Static files
+├── index.html             # HTML template
+├── vite.config.js         # Vite configuration
+├── tailwind.config.js     # Tailwind configuration
+└── package.json
+```
 
 ---
 
-## 5. 🌐 Connecting to MongoDB Atlas
+## Environment Variables
 
-The project uses a shared **MongoDB Atlas** database for development.
+### Backend `.env` File
 
-* You will receive a **unique connection string** from Akram (the project manager).
-* Paste that connection string into your `.env` file under the key `MONGO_URI`.
-* Example:
+Create `backend/.env` with the following variables:
 
-  ```
-  MONGO_URI=mongodb+srv://backend-lead:yourPassword@cluster0.xxxxx.mongodb.net/taskit_dev?retryWrites=true&w=majority
-  ```
+```env
+# ===================
+# SERVER CONFIGURATION
+# ===================
+PORT=5000
 
-This ensures everyone is working on the same database without conflicts.
+# ===================
+# DATABASE
+# ===================
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/taskit?retryWrites=true&w=majority
+
+# ===================
+# SECURITY
+# ===================
+SECRET=your-super-secret-jwt-signing-key-here
+
+# ===================
+# FRONTEND URL
+# ===================
+FRONTEND_URL=http://localhost:5173
+
+# ===================
+# EMAIL (Gmail API OAuth)
+# ===================
+EMAIL_USER=your-email@gmail.com
+CLIENT_ID=your-google-oauth-client-id.apps.googleusercontent.com
+CLIENT_SECRET=your-google-oauth-client-secret
+REFRESH_TOKEN=your-oauth-refresh-token
+REDIRECT_URI=https://developers.google.com/oauthplayground
+```
+
+### Environment Variables Reference
+
+| Variable | Required | Description | Example |
+|----------|----------|-------------|---------|
+| `PORT` | No | Server port (default: 5000) | `5000` |
+| `MONGODB_URI` | Yes | MongoDB connection string | `mongodb+srv://...` |
+| `SECRET` | Yes | JWT signing secret key | `random-secure-string` |
+| `FRONTEND_URL` | Yes | Frontend URL for CORS | `http://localhost:5173` |
+| `EMAIL_USER` | Yes | Gmail sender address | `noreply@example.com` |
+| `CLIENT_ID` | Yes | Google OAuth Client ID | `*.apps.googleusercontent.com` |
+| `CLIENT_SECRET` | Yes | Google OAuth Client Secret | `GOCSPX-...` |
+| `REFRESH_TOKEN` | Yes | Google OAuth Refresh Token | `1//04...` |
+| `REDIRECT_URI` | Yes | OAuth redirect URI | `https://developers.google.com/oauthplayground` |
+
+### Frontend Environment (Optional)
+
+Vite reads environment variables from `.env` files. For custom API URL:
+
+```env
+# frontend/.env.local
+VITE_API_URL=http://localhost:5000
+VITE_SOCKET_URL=http://localhost:5000
+```
 
 ---
 
-## 6. 🚀 Running the Application
+## Database Setup
 
-To start the backend server:
+### Option 1: MongoDB Atlas (Recommended)
 
+1. Create free account at [mongodb.com/atlas](https://www.mongodb.com/atlas)
+2. Create a new cluster
+3. Create database user with password
+4. Whitelist your IP address
+5. Get connection string and add to `.env`
+
+```env
+MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/taskit?retryWrites=true&w=majority
+```
+
+### Option 2: Local MongoDB
+
+1. Install MongoDB Community Edition
+2. Start MongoDB service
+3. Use local connection string
+
+```env
+MONGODB_URI=mongodb://localhost:27017/taskit
+```
+
+### Database Initialization
+
+Collections are created automatically when:
+- First user registers (users collection)
+- First project created (projects collection)
+- First task created (tasks collection)
+
+### Indexes
+
+Indexes are defined in Mongoose schemas and created on first connection.
+
+---
+
+## Gmail API Setup
+
+TaskIT uses Gmail API with OAuth 2.0 for sending emails.
+
+### Step 1: Create Google Cloud Project
+
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create new project or select existing
+3. Enable Gmail API
+
+### Step 2: Configure OAuth Consent Screen
+
+1. Go to APIs & Services → OAuth consent screen
+2. Select "External" user type
+3. Fill in app information
+4. Add scopes: `https://mail.google.com/`
+5. Add test users (your email)
+
+### Step 3: Create OAuth Credentials
+
+1. Go to APIs & Services → Credentials
+2. Create OAuth 2.0 Client ID
+3. Select "Web application"
+4. Add authorized redirect URI:
+   ```
+   https://developers.google.com/oauthplayground
+   ```
+5. Copy Client ID and Client Secret
+
+### Step 4: Get Refresh Token
+
+1. Go to [OAuth Playground](https://developers.google.com/oauthplayground)
+2. Click gear icon → Use your own OAuth credentials
+3. Enter Client ID and Client Secret
+4. In left panel, select Gmail API v1 → `https://mail.google.com/`
+5. Click "Authorize APIs"
+6. Login and grant permissions
+7. Click "Exchange authorization code for tokens"
+8. Copy the Refresh Token
+
+### Step 5: Update `.env`
+
+```env
+EMAIL_USER=your-authorized-gmail@gmail.com
+CLIENT_ID=your-client-id.apps.googleusercontent.com
+CLIENT_SECRET=your-client-secret
+REFRESH_TOKEN=1//04your-refresh-token
+REDIRECT_URI=https://developers.google.com/oauthplayground
+```
+
+---
+
+## Running the Application
+
+### Development Mode
+
+**Terminal 1 - Backend:**
 ```bash
 cd backend
 npm run dev
 ```
 
-To start the frontend:
-
+**Terminal 2 - Frontend:**
 ```bash
 cd frontend
 npm run dev
 ```
 
-When everything is set up correctly, you should see:
+### Expected Output
+
+**Backend:**
+```
+🔗 Connected to MongoDB
+🚀 Server running on port 5000
+```
+
+**Frontend:**
+```
+  VITE v7.0.0  ready in 500 ms
+
+  ➜  Local:   http://localhost:5173/
+  ➜  Network: http://192.168.x.x:5173/
+```
+
+### Access Points
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:5173 |
+| Backend API | http://localhost:5000/api |
+| Socket.IO | http://localhost:5000 |
+
+---
+
+## Development Workflow
+
+### Git Branching
+
+```bash
+# Always start from latest main
+git checkout main
+git pull origin main
+
+# Create feature branch
+git checkout -b feature/your-feature-name
+
+# Work on your changes...
+
+# Commit changes
+git add .
+git commit -m "feat: add new feature"
+
+# Push and create PR
+git push origin feature/your-feature-name
+```
+
+### Commit Message Convention
 
 ```
-✅ Connected to MongoDB Atlas
-✅ Server running on port 5000
+type: description
+
+Types:
+- feat:     New feature
+- fix:      Bug fix
+- docs:     Documentation
+- style:    Formatting
+- refactor: Code restructuring
+- test:     Tests
+- chore:    Build/tooling
 ```
 
-and the frontend app running in your browser (usually on `http://localhost:3000`).
+### Code Style
+
+- Use Prettier for formatting
+- ESLint for linting
+- Follow existing patterns
 
 ---
 
-## 7. 🧑‍💻 Git & Collaboration Rules
+## Troubleshooting
 
-* Always **pull the latest code** before starting work:
+### Common Issues
 
-  ```bash
-  git pull origin main
-  ```
-* **Never push your `.env` file or `node_modules`**.
-* Create a **new branch** for your feature or fix:
+| Issue | Solution |
+|-------|----------|
+| `MONGODB_URI undefined` | Check `.env` file exists in backend folder |
+| `ECONNREFUSED` | MongoDB not running or IP not whitelisted |
+| `Authentication failed` | Check MongoDB credentials |
+| `Cannot find module` | Run `npm install` in affected folder |
+| `CORS error` | Check `FRONTEND_URL` matches actual frontend URL |
+| `Email not sending` | Verify Gmail OAuth setup and tokens |
 
-  ```bash
-  git checkout -b feature/login-page
-  ```
-* Once done, push your branch and open a pull request.
+### Port Already in Use
+
+```bash
+# Find process using port 5000
+netstat -ano | findstr :5000
+
+# Kill process (Windows)
+taskkill /PID <pid> /F
+```
+
+### Reset Database
+
+```bash
+# Connect to MongoDB and drop database
+mongosh
+use taskit
+db.dropDatabase()
+```
+
+### Debug Mode
+
+Add to backend `.env`:
+```env
+DEBUG=true
+```
+
+---
+
+## VS Code Extensions
+
+Recommended extensions for development:
+
+- **ESLint** - Linting
+- **Prettier** - Formatting
+- **Tailwind CSS IntelliSense** - CSS autocomplete
+- **MongoDB for VS Code** - Database explorer
+- **REST Client** - API testing
 
 ---
 
-## 8. 🧾 Common Issues
+## Next Steps
 
-| Issue                     | Solution                                                 |
-| ------------------------- | -------------------------------------------------------- |
-| `Authentication failed`   | Check your MongoDB username/password in `.env`.          |
-| `ECONNREFUSED` or timeout | Ensure your IP is whitelisted in Atlas.                  |
-| `Cannot find module`      | Run `npm install` again.                                 |
-| `.env not found`          | Make sure you created it using `.env.example` as a base. |
+- Review [Architecture](architecture.md) for system design
+- Read [API Documentation](api/) for endpoint details
+- Check [Database Schema](database/schema.md) for data models
+- See [Deployment Guide](deployment.md) for production setup
 
 ---
 
-## 9. 🧠 Best Practices
-
-* Use **Prettier** for consistent code formatting.
-* Use **clear commit messages** (e.g., `feat: add login form`).
-* Communicate with the team before making schema or config changes.
-* Test your routes carefully — avoid deleting all data or dropping collections.
-
----
-
-## 10. ✅ Summary
-
-Before running the project, make sure you have:
-
-1. Cloned the repo
-2. Installed dependencies (`npm install`)
-3. Created your `.env` file using `.env.example`
-4. Added the correct MongoDB connection string
-5. Successfully run the backend and frontend locally
-
----
+*Last Updated: December 2025*
