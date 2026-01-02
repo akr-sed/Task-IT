@@ -116,3 +116,13 @@ Session.findOne({ token: authToken })
 // Logout everywhere
 Session.deleteMany({ userId: userId.toString() })
 ```
+## Cleaning Up When Deleting Stuff
+
+### When you delete a project:
+
+```javascript
+await Task.deleteMany({ projectId: project._id });
+await Invite.deleteMany({ projectId: project._id });
+await Log.deleteMany({ projectId: project._id });
+await Project.findByIdAndDelete(projectId);
+```
