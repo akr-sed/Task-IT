@@ -64,3 +64,20 @@ Task.find({
 
 ---
 
+## Tasks & Comments
+
+Comments are embedded right inside tasks. We did it this way because you never really need comments without the task they belong to.
+
+```javascript
+// Add one
+Task.findByIdAndUpdate(taskId, {
+  $push: { comments: newComment }
+})
+
+// Remove one
+Task.findByIdAndUpdate(taskId, {
+  $pull: { comments: { _id: commentId } }
+})
+```
+
+---
