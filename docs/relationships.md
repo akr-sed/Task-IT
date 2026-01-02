@@ -81,3 +81,23 @@ Task.findByIdAndUpdate(taskId, {
 ```
 
 ---
+
+## Notifications
+
+Stored in the Logs collection. Nothing fancy.
+
+```javascript
+// Get recent notifications
+Log.find({ userAssigned: userId })
+  .sort({ createdAt: -1 })
+  .limit(20)
+
+// How many unread?
+Log.countDocuments({ userAssigned: userId, isRead: false })
+
+// Mark all read
+Log.updateMany(
+  { userAssigned: userId, isRead: false },
+  { isRead: true }
+)
+```
