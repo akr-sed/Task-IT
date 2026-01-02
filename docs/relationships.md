@@ -101,3 +101,18 @@ Log.updateMany(
   { isRead: true }
 )
 ```
+
+## Sessions
+
+Track who's logged in where.
+
+```javascript
+// All sessions for someone
+Session.find({ userId: userId.toString() })
+
+// Check if token works
+Session.findOne({ token: authToken })
+
+// Logout everywhere
+Session.deleteMany({ userId: userId.toString() })
+```
