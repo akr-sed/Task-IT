@@ -146,3 +146,14 @@ await User.findByIdAndDelete(userId);
 Don't forget to handle their owned projects first though.
 
 ---
+## Why Embedded vs Referenced?
+
+| Data | How | Why |
+|------|-----|-----|
+| Members | Embedded in Project | Few of them, always need them together |
+| Comments | Embedded in Task | Never query them alone |
+| Tasks | Separate collection | Could be thousands, need to filter/paginate |
+| Notifications | Separate collection | Paginated, queried on their own |
+| Sessions | Separate collection | Checked constantly for auth |
+
+---
