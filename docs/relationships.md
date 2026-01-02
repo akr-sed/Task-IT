@@ -148,12 +148,32 @@ Don't forget to handle their owned projects first though.
 ---
 ## Why Embedded vs Referenced?
 
-| Data | How | Why |
-|------|-----|-----|
-| Members | Embedded in Project | Few of them, always need them together |
-| Comments | Embedded in Task | Never query them alone |
-| Tasks | Separate collection | Could be thousands, need to filter/paginate |
-| Notifications | Separate collection | Paginated, queried on their own |
-| Sessions | Separate collection | Checked constantly for auth |
+| Data                           | How                 | Why |
+|--------------------------------|---------------------|-----|
+| Members                        | Embedded in Project | Few of them, always need them together |
+| Comments                       | Embedded in Task    | Never query them alone |
+| Tasks                          | Separate collection | Could be thousands, need to filter/paginate |
+| Notifications                  | Separate collection | Paginated, queried on their own |
+| Sessions                       | Separate collection | Checked constantly for auth |
 
 ---
+
+## Member Operations (Atomic)
+
+```javascript
+// Add someone
+await Project.findByIdAndUpdate(projectId, {
+  $addToSet: { members: { id: userId, role: 'member' } }
+});
+
+// Change their role
+await Project.findOneAndUpdate(
+  { _id: projectId, 'members.id': userId },
+  { $set: { 'members.$.role': newRole } }
+);
+
+// Remove them
+await Project.findByIdAndUpdate(projectId, {
+  $pull: { members: { id: userId } }
+});
+```
