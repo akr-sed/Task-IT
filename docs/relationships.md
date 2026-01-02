@@ -126,3 +126,23 @@ await Invite.deleteMany({ projectId: project._id });
 await Log.deleteMany({ projectId: project._id });
 await Project.findByIdAndDelete(projectId);
 ```
+
+### When you delete a user:
+
+```javascript
+await Session.deleteMany({ userId: user._id.toString() });
+await Log.deleteMany({ userAssigned: user._id });
+await Project.updateMany(
+  { 'members.id': user._id },
+  { $pull: { members: { id: user._id } } }
+);
+await Task.updateMany(
+  { assignedTo: user._id },
+  { assignedTo: null }
+);
+await User.findByIdAndDelete(userId);
+```
+
+Don't forget to handle their owned projects first though.
+
+---
