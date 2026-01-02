@@ -177,3 +177,25 @@ await Project.findByIdAndUpdate(projectId, {
   $pull: { members: { id: userId } }
 });
 ```
+
+---
+
+## Quick Tips
+
+**Make queries faster:**
+- Use `.select('title status')` to only get fields you need
+- Use `.lean()` for read-only stuff
+- Always paginate logs and notifications
+
+**These are fast** (indexed):
+```javascript
+Task.find({ projectId, status: 'done' })
+Task.find({ assignedTo: userId })
+```
+
+**These are slow** (avoid):
+```javascript
+Task.find({ description: /keyword/i })  // no index
+```
+
+---
