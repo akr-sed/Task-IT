@@ -25,3 +25,22 @@ Users also have:
 | User    | Notifications | One-to-Many  | `userAssigned`    |
 | User    | Sessions      | One-to-Many  | `userId`          |
 | Project | Invites       | One-to-Many  | `projectId`       |
+
+---
+
+## Users & Projects
+
+People can own projects or just be members. We keep members as an array inside the project doc since there's usually not that many and we always need them together.
+
+```javascript
+// Get all projects someone can access
+Project.find({
+  $or: [
+    { ownedBy: userId },
+    { 'members.id': userId }
+  ]
+})
+
+// Add project with member details
+Project.findById(projectId).populate('members.id', 'name email')
+```
