@@ -199,3 +199,15 @@ Task.find({ description: /keyword/i })  // no index
 ```
 
 ---
+
+## Cheat Sheet
+
+| I need to... | Do this |
+|--------------|---------|
+| Get user's projects | `Project.find({ $or: [{ ownedBy: userId }, { 'members.id': userId }] })` |
+| Get project tasks | `Task.find({ projectId })` |
+| Get my tasks | `Task.find({ assignedTo: userId })` |
+| Add comment | `Task.findByIdAndUpdate(id, { $push: { comments: c } })` |
+| Add member | `Project.findByIdAndUpdate(id, { $addToSet: { members: m } })` |
+| Remove member | `Project.findByIdAndUpdate(id, { $pull: { members: { id: uid } } })` |
+
