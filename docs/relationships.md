@@ -44,3 +44,23 @@ Project.find({
 // Add project with member details
 Project.findById(projectId).populate('members.id', 'name email')
 ```
+---
+
+## Projects & Tasks
+
+Pretty straightforward - tasks belong to projects.
+
+```javascript
+// All tasks in a project
+Task.find({ projectId })
+
+// With filters
+Task.find({ 
+  projectId,
+  status: 'in progress',
+  assignedTo: userId
+})
+```
+
+---
+
