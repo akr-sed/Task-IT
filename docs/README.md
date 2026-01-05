@@ -1,4 +1,144 @@
-# TASKIT
+# 📚 TaskIT Documentation
+
+Welcome to the TaskIT documentation. This guide covers everything you need to know about the project.
+
+---
+
+## Quick Navigation
+
+| Document | Description |
+|----------|-------------|
+| [Architecture](architecture.md) | System design and data flow |
+| [Setup Guide](setup.md) | Development environment setup |
+| [Deployment](deployment.md) | Production deployment guide |
+| [API Reference](api/) | Backend API documentation |
+| [Database](database/) | MongoDB schema and relationships |
+| [Frontend](frontend/) | React components and hooks |
+
+---
+
+## Documentation Structure
+
+```
+docs/
+├── README.md              # This file - Documentation index
+├── architecture.md        # System architecture overview
+├── setup.md               # Development setup guide
+├── deployment.md          # Production deployment
+│
+├── api/                   # API Documentation
+│   ├── authentication.md  # Auth endpoints
+│   ├── projects.md        # Project endpoints
+│   ├── tasks.md           # Task endpoints
+│   ├── notifications.md   # Notification endpoints
+│   └── dashboard.md       # Dashboard data sources
+│
+├── database/              # Database Documentation
+│   ├── schema.md          # MongoDB collections
+│   └── relationships.md   # Data relationships
+│
+└── frontend/              # Frontend Documentation
+    ├── README.md          # Frontend overview
+    ├── components.md      # React components
+    └── hooks.md           # Custom hooks
+```
+
+> **Note:** The following legacy files are deprecated and kept for historical reference only:
+> - `schema.md` (root level) → Use `database/schema.md` instead
+> - `product_Backlog.md` (root level) → Use root `Product Backlog.md` instead
+> - `SETUP.md` → Use `setup.md` instead
+
+---
+
+## Getting Started
+
+1. **New Developers:** Start with the [Setup Guide](setup.md)
+2. **Understanding the System:** Read the [Architecture](architecture.md)
+3. **Backend Work:** Check [API Reference](api/)
+4. **Frontend Work:** See [Frontend Guide](frontend/)
+5. **Deploying:** Follow the [Deployment Guide](deployment.md)
+
+---
+
+## Project Overview
+
+TaskIT is a web-based task and project management platform built with the MERN stack.
+
+### Key Features
+
+- ✅ Project creation and management
+- ✅ Task assignment and tracking
+- ✅ Team collaboration with roles
+- ✅ Real-time notifications
+- ✅ Email invitations
+- ✅ Calendar view for due dates
+- ✅ Activity logging
+
+### Technology Stack
+
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19.1, Vite 7.1, Tailwind CSS 3.4 |
+| Backend | Node.js 18+, Express 4.18 |
+| Database | MongoDB with Mongoose 8.14 |
+| Real-time | Socket.IO 4.8 |
+| Auth | JWT, bcrypt |
+| Email | Nodemailer with Gmail API |
+
+---
+
+## User Roles
+
+| Role | Permission Level | Capabilities |
+|------|-----------------|--------------|
+| Owner | 3 (Highest) | Full control, invite members, transfer ownership, delete project |
+| Admin | 2 | Manage tasks, update member roles, remove members |
+| Member | 1 | View tasks, update assigned tasks, comment |
+
+---
+
+## API Overview
+
+| Endpoint Group | Base Path | Description |
+|----------------|-----------|-------------|
+| Authentication | `/api/auth` | Login, register, password reset |
+| Projects | `/api/projects` | CRUD, invitations, members |
+| Tasks | `/api/tasks` | CRUD, assignment, comments |
+| Notifications | `/api/notifications` | Activity logs, mark read |
+| Logs | `/api/logs` | Activity history |
+
+---
+
+## Additional Resources
+
+### Root Level Documents
+
+| Document | Location | Description |
+|----------|----------|-------------|
+| [Project README](../README.md) | Root | Project overview |
+| [Product Backlog](../Product%20Backlog.md) | Root | User stories |
+| [Sprint Backlog](../Sprint%20Backlog.md) | Root | Sprint planning |
+| [Increment](../Increment.md) | Root | Release history |
+| [Definition of Done](../Definition%20of%20Done.md) | Root | Completion criteria |
+
+---
+
+## Contributing to Docs
+
+When updating documentation:
+
+1. Keep language clear and concise
+2. Include code examples where helpful
+3. Update the table of contents if adding sections
+4. Test all links before committing
+5. Use consistent formatting
+
+---
+
+*Last Updated: December 2025*
+
+---
+---
 
 # Software Requirements Specification (SRS) for Taskit
 
