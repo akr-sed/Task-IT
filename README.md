@@ -208,7 +208,7 @@ Task-IT/
 | Socket.IO | 4.8 | Real-time events |
 | JWT | 9.x | Authentication |
 | bcrypt | 6.x | Password hashing |
-| Nodemailer | 7.x | Email service |
+| o2Auth (gmail api) | 7.x | Email service |
 
 ---
 
