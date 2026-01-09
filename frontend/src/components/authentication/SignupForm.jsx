@@ -47,7 +47,7 @@ const SignupForm = () => {
   };
 
   const handleSubmit = async (e) => {
-    console.log("this is to check the form data", formData);
+    // console.log("this is to check the form data", formData);
     e.preventDefault();
     setLoading(true);
     setError("");

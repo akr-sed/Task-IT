@@ -63,7 +63,6 @@ const PublicRoute = ({ children }) => {
 };
 
 
-console.log("this is me leaving a test ", import.meta.env.VITE_API_BASE_URL)
 
 function App() {
   return (
