@@ -1,4 +1,4 @@
-import rateLimit from "express-rate-limit";
+import rateLimit, { ipKeyGenerator } from "express-rate-limit";
 
 // Compute a sane retry-after value even if resetTime is missing
 const getRetryAfterSeconds = (req, fallbackSeconds) => {
@@ -52,7 +52,8 @@ export const signupLimiter = buildLimiter({
   message: "Too many signup attempts. Please try again after 1 hour.",
   fallbackSeconds: 60 * 60,
   keyGenerator: (req) => {
-  return `${req.ip}-${req.body?.email || "unknown"}`;
+  const normalizedIP = ipKeyGenerator(req);
+  return `${normalizedIP}-${req.body?.email || "unknown"}`;
 }
 
 });

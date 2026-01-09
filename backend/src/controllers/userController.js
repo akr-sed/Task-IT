@@ -67,9 +67,20 @@ export const userRegistration = async (req, res) => {
 
     // Commit only AFTER everything succeeds
     await session.commitTransaction();
-    //  Email sending is NOT part of DB transaction
-    await sendVerificationEmail(email, verificationCode, name);
-
+    session.endSession();
+    
+    // Email sending - if it fails, delete the temp user so they can retry
+    try {
+      await sendVerificationEmail(email, verificationCode, name);
+    } catch (emailError) {
+      console.error("Failed to send verification email:", emailError);
+      // Delete temp user and code so user can retry signup
+      await TempUser.deleteOne({ _id: tempUser[0]._id });
+      await Code.deleteMany({ userId: tempUser[0]._id });
+      return res.status(500).json({ 
+        message: "Failed to send verification email. Please try again." 
+      });
+    }
 
     res.status(201).json({
       message:
@@ -77,12 +88,14 @@ export const userRegistration = async (req, res) => {
       tempUser: tempUser[0]
     });
   } catch (error) {
-    await session.abortTransaction();
+    // Only abort if transaction hasn't been committed
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
+    session.endSession();
     console.error("error in the signupController:", error);
 
     res.status(500).json({ message: "internal server error" });
-  } finally {
-    session.endSession();
   }
 };
 
