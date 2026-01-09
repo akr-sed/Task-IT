@@ -16,7 +16,7 @@ const getRetryAfterSeconds = (req, fallbackSeconds) => {
   return fallbackSeconds;
 };
 
-const buildLimiter = ({ windowMs, max, message, fallbackSeconds }) =>
+const buildLimiter = ({ windowMs, max, message, fallbackSeconds, skip, keyGenerator }) =>
   rateLimit({
     windowMs,
     max,
@@ -24,6 +24,8 @@ const buildLimiter = ({ windowMs, max, message, fallbackSeconds }) =>
     standardHeaders: true,
     legacyHeaders: false,
     skipSuccessfulRequests: false,
+    skip,
+    keyGenerator,
     handler: (req, res) => {
       const retryAfter = getRetryAfterSeconds(req, fallbackSeconds);
 
